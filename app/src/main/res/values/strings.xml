@@ -1,0 +1,61 @@
+<resources>
+    <string name="app_name">Magnit Demo</string>
+    <string name="login_text">Логин</string>
+    <string name="password_text">Пароль</string>
+    <string name="enter_text">Вход</string>
+    <string name="time_pd_hour">Время обработки ПД, часов</string>
+    <string name="total_processing_time">Общее время обработки:</string>
+    <string name="average_processing_time">Среднее время обработки сотрудником:</string>
+    <string name="average_waiting_time">Среднее время ожидания:</string>
+    <string name="total_time_demo">800 367 ч.</string>
+    <string name="average_processing_num">80 ч.</string>
+    <string name="average_waiting_time_num">100 ч.</string>
+    <string name="more_details">Подробнее</string>
+    <string name="open_text">Открыто</string>
+    <string name="value_num_monitoring">22700</string>
+    <string name="num_preview_sla">83%</string>
+    <string name="sla">sla</string>
+    <string name="dynamics">Динамика</string>
+    <string name="by_district">По округу</string>
+    <string name="by_group">По группам</string>
+    <string name="legend_green_text">Без нарушения</string>
+    <string name="legend_yellow_text">75% от SLA истекло</string>
+    <string name="legend_red_text">100% от SLA истекло</string>
+    <string name="text_interval">за последние 7 дней</string>
+    <string name="name_text">Название</string>
+    <string name="text_processed">Обработанно</string>
+    <string name="text_In_violation">С нарушением</string>
+    <string name="text_sla_procent">SLA %</string>
+    <string name="time_text">Время, часов</string>
+
+    <string-array name="periods">
+        <item>За последние 7 дней</item>
+        <item>За месяц</item>
+        <item>За 3 месяца</item>
+        <item>За 6 месяцев</item>
+        <item>За последний год</item>
+    </string-array>
+
+    <!-- сообщения аутентификации -->
+    <string name="authentication_message_success">Аутентификация прошла успешно.</string>
+    <string name="authentication_message_error">В результате аутентификации произошла ошибка.</string>
+    <string name="authentication_message_fail">Не удалось выполнить аутентификацию.</string>
+    <string name="authentication_message_invalid_credentials">Неверные учетные данные.</string>
+    <string name="authentication_message_invalid_server_configuration">Неверная конфигурация сервера.</string>
+    <string name="authentication_message_offline_denied">Невозможно выполнить офлайн аутентификацию.</string>
+    <string name="authentication_message_offline_expired">Хэш учетных данных устарел.</string>
+    <string name="authentication_message_offline_notexists">Хэш учетных данных не существует.</string>
+
+    <string name="no_data">Нет данных для отображения</string>
+
+    <!-- preferences -->
+    <string name="pref_key_server_ip">pref_key_server_ip</string>
+    <string name="pref_summary_server_ip_address">IP-адрес сервера синхронизации</string>
+
+    <string name="pref_key_server_port">pref_key_server_port</string>
+    <string name="pref_summary_server_port">Порт сервера синхронизации</string>
+
+    <string name="pref_key_use_secure_connection">pref_key_use_secure_connection</string>
+    <string name="pref_summary_use_secure_connection">Использовать защищенное соединение</string>
+
+</resources>

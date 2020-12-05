@@ -1,0 +1,6 @@
+include ':optimum-4.1.0.7'
+include ':optimum-4.1.0.4'
+include ':optimum-4.1.0.4'
+include ':optimum-4.1.0.4'
+include ':app'
+rootProject.name = "Magnit Demo"
