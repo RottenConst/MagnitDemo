@@ -132,13 +132,13 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
 
     //запросс данных общих днных для педварительново отобращения на  графиках
     private DataOnCardView getDataOnCard(String tableName) {
-        int count = dbWrite.getCount(tableName, "");
-        int sla75 = dbWrite.getSla75Expired(tableName, "");
+        int count = dbWrite.getCount(tableName, "2020-01-01", "2020-12-31");
+        int sla75 = dbWrite.getSla75Expired(tableName, "2020-01-01", "2020-12-31");
         int slaExpired;
         if (tableName.equals(DBContact.ProcessedSet.TABLE_NAME)) {
-            slaExpired = dbWrite.getSlaNotExpired("");
+            slaExpired = dbWrite.getSlaNotExpired("2020-01-01", "2020-12-31");
         } else {
-            slaExpired = dbWrite.getSlaExpired(tableName, "");
+            slaExpired = dbWrite.getSlaExpired(tableName, "2020-01-01", "2020-12-31");
         }
         return new DataOnCardView(count + sla75 + slaExpired, count, sla75, slaExpired);
     }

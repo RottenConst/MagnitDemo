@@ -57,5 +57,8 @@
 
     <string name="pref_key_use_secure_connection">pref_key_use_secure_connection</string>
     <string name="pref_summary_use_secure_connection">Использовать защищенное соединение</string>
+    <string name="show_date">Показать</string>
+    <string name="setPeriod">Выбрать начало периода</string>
+    <string name="setEndPeriod">выбрать конец периода</string>
 
 </resources>

@@ -28,6 +28,8 @@ import ru.optimum.load.magnitdemo.screen.main.details.fragments.time.GroupTimeFr
  */
 public class DetailsActivity extends AppCompatActivity {
 
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,11 +45,17 @@ public class DetailsActivity extends AppCompatActivity {
         BottomNavigationView navigationView = findViewById(R.id.navigation_details);
 
         navigationView.getMenu().getItem(0).setChecked(true);
-        if (data != 0) {
-            actionBar.setTitle("Обработанные ПД");
+        if (data == 1) {
+            actionBar.setTitle("Открытые ПД");
+            getSupportFragmentManager().beginTransaction().replace(R.id.details_container, DynamicFragment.newInstance(data)).commit();
+        } else if (data == 2) {
+            actionBar.setTitle("Поступившие ПД");
+            getSupportFragmentManager().beginTransaction().replace(R.id.details_container, DynamicFragment.newInstance(data)).commit();
+        } else if (data == 3) {
+            actionBar.setTitle("Обработаные ПД");
             getSupportFragmentManager().beginTransaction().replace(R.id.details_container, DynamicFragment.newInstance(data)).commit();
         } else {
-            actionBar.setTitle("Время Обработки");
+            actionBar.setTitle("Время обработки");
             getSupportFragmentManager().beginTransaction().replace(R.id.details_container, DynamicTimeFragment.newInstance()).commit();
         }
         navigationView.setOnNavigationItemSelectedListener(item -> {

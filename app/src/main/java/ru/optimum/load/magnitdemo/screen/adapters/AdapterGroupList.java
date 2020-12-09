@@ -48,6 +48,7 @@ public class AdapterGroupList extends RecyclerView.Adapter<AdapterGroupList.Adap
     }
 
     public void setTestGroupData(List<TestGroupData> testGroupData) {
+        this.testData.clear();
         this.testData = testGroupData;
     }
 

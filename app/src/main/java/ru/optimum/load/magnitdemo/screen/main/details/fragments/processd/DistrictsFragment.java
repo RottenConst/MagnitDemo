@@ -1,11 +1,16 @@
 package ru.optimum.load.magnitdemo.screen.main.details.fragments.processd;
 
+import android.app.ActionBar;
+import android.app.DatePickerDialog;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
@@ -14,7 +19,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
@@ -23,6 +33,8 @@ import ru.optimum.load.magnitdemo.data.TestData;
 import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
 import ru.optimum.load.magnitdemo.screen.adapters.AdapterDetailsList;
 import ru.optimum.load.magnitdemo.screen.adapters.SpinnerAdapterPeriod;
+import ru.optimum.load.magnitdemo.screen.main.details.DetailsActivity;
+
 /*
     Фрагмент для отображения данных по областям
  */
@@ -32,56 +44,46 @@ public class DistrictsFragment extends Fragment {
     RecyclerView tableRV;
     AdapterDetailsList adapter;
     LinearLayoutManager layoutManager;
-    Spinner periodSpinner;
+    Calendar calendar;
+    int setYear;
+    int setMonth;
+    int setDayOfMonth;
+    String dateFrom;
+    String dateBefore;
+    Button btnDateFrom;
+    Button btnDateBefore;
+    Button btnShowData;
     private DatabaseWrapper dbWrapper;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.districts_fragment, container, false);
-        periodSpinner = view.findViewById(R.id.period_spiner);
         tableRV = view.findViewById(R.id.table_recycler);
+        btnDateFrom = view.findViewById(R.id.btn_dis_set_date_from);
+        btnDateBefore = view.findViewById(R.id.btn_dis_set_date_before);
+        btnShowData = view.findViewById(R.id.btn_dis_show_date);
+
+        calendar = Calendar.getInstance();
+        setYear = calendar.get(Calendar.YEAR);
+        setMonth = calendar.get(Calendar.MONTH);
+        setDayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        dateBefore = setYear + "-" + setMonth + "-" + setDayOfMonth;
         dbWrapper = DemoApp.dbWrapper();
 
-        initRecyclerView(getData("")); //инициализация RV с данными за все время
-        initSpinner();
+        initRecyclerView(getData("2020-01-01", "2020-12-31")); //инициализация RV с данными за все время
 
-        //отображение данных в соответствии с выбранным периодом
-        periodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        adapter.setTestData(getData("")); //изменить данные для адаптера
-                        adapter.notifyDataSetChanged(); //обновить данные на фрагменте
-                        break;
-                    case 1:
-                        adapter.setTestData(getData("2020-10-07"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 2:
-                        adapter.setTestData(getData("2020-10-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 3:
-                        adapter.setTestData(getData("2020-08-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 4:
-                        adapter.setTestData(getData("2020-06-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 5:
-                        adapter.setTestData(getData("2020-01-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                }
-            }
+        btnDateFrom.setOnClickListener(v -> {
+            new DatePickerDialog(getContext(), dateSetListenerFrom, setYear, setMonth, setDayOfMonth).show();
+        });
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        btnDateBefore.setOnClickListener(v -> {
+            new DatePickerDialog(getContext(), dateSetListenerBefore, setYear, setMonth, setDayOfMonth).show();
+        });
 
-            }
+        btnShowData.setOnClickListener(v -> {
+            adapter.setTestData(getData(dateFrom, dateBefore));
+            adapter.notifyDataSetChanged();
         });
 
         return view;
@@ -92,60 +94,146 @@ public class DistrictsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     //получить данные для отображения
-    private List<TestData> getData(String date) {
+    private List<TestData> getData(String dateFrom, String dateBefore) {
         List<TestData> testData = new ArrayList<>();
+        TestData data = new TestData();
+        float sla = 0;
+        int processed = 0;
+        int violation = 0;
         if (dataDB == 1) { // в соответствии от полученного значения выбираем таблицу из которой запрашивать данные
             //запросс данныйх из бд, вычесление значений и добавление данных в массив
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictOpenSet("М%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictOpenSet("ГК%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictOpenSet("Северо-Западный%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictOpenSet("ВОЛЖСКИЙ ОКРУГ%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictOpenSet("РЦ Ярославл%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictOpenSet("РЦ Вороне%", date)));
+            testData = getDistrictValue(dbWrapper.getValueOfDistrictOpenSet(dateFrom, dateBefore));
+            for (int i = 0; i < testData.size(); i++) {
+                if (testData.get(i).getTitle().contains("ГК")){
+                    data.setTitle(testData.get(i).getTitle());
+                    sla += testData.get(i).getSla();
+                    processed += testData.get(i).getProcessed();
+                    violation += testData.get(i).getViolation();
+                    testData.remove(i);
+                }
+            }
+            data.setSla(sla);
+            data.setViolation(violation);
+            data.setProcessed(processed);
+            testData.add(data);
+
+            for (int i = 0; i < testData.size(); i++) {
+                if (testData.get(i).getTitle().contains("МОСКВА ОКРУГ")) {
+                    testData.remove(i);
+                }
+            }
         } else if (dataDB == 2) {
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictProcessedSed("М%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictProcessedSed("ГК%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictProcessedSed("РЦ Вороне%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictProcessedSed("ВОЛЖСКИЙ ОКРУГ%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictProcessedSed("Северо-Западный%", date)));
+            testData = getDistrictValue(dbWrapper.getValueOfDistrictProcessedSed(dateFrom, dateBefore));
+            for (int i = 0; i < testData.size(); i++) {
+                if (testData.get(i).getTitle().contains("ГК")){
+                    data.setTitle(testData.get(i).getTitle());
+                    sla += testData.get(i).getSla();
+                    processed += testData.get(i).getProcessed();
+                    violation += testData.get(i).getViolation();
+                    testData.remove(i);
+                }
+            }
+            data.setSla(sla);
+            data.setViolation(violation);
+            data.setProcessed(processed);
+            testData.add(data);
+
+            for (int i = 0; i < testData.size(); i++) {
+                if (testData.get(i).getTitle().contains("МОСКВА ОКРУГ")) {
+                    testData.remove(i);
+                }
+            }
         } else if (dataDB == 3) {
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet("М%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet("ГК%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet("РЦ Вороне%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet("РЦ Ярославл%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet("ВОЛЖСКИЙ ОКРУГ%", date)));
-            testData.add(getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet("Северо-Западный%", date)));
+            testData = getDistrictValue(dbWrapper.getValueOfDistrictReceiptSet(dateFrom, dateBefore));
+            for (int i = 0; i < testData.size(); i++) {
+                if (testData.get(i).getTitle().contains("ГК")){
+                    data.setTitle(testData.get(i).getTitle());
+                    sla += testData.get(i).getSla();
+                    processed += testData.get(i).getProcessed();
+                    violation += testData.get(i).getViolation();
+                    testData.remove(i);
+                }
+            }
+            data.setSla(sla);
+            data.setViolation(violation);
+            data.setProcessed(processed);
+            testData.add(data);
+
+            for (int i = 0; i < testData.size(); i++) {
+                if (testData.get(i).getTitle().contains("МОСКВА ОКРУГ")) {
+                    testData.remove(i);
+                }
+            }
         }
         return testData;
     }
 
     //Вычесление значений
-    private TestData getDistrictValue( Cursor cursor) {
-        TestData data = new TestData();
-        float count = 0;
-        float violation = 0;
+    private List<TestData> getDistrictValue( Cursor cursor) {
+        List<TestData> data = new ArrayList<>();
+        float count;
+        float violation;
+
         if (cursor != null) {
             if (cursor.moveToFirst()) {
-                data.setTitle(cursor.getString(1)); //достать из курсора навание области
-                count = cursor.getFloat(2); //достать из курсора сумму count
-                violation = cursor.getFloat(3);
-            }
-            data.setProcessed((int) count);
-            data.setViolation((int) violation);
-            if (count != 0) {
-                float valueOne = (count - violation);
-                float valueTwo = count/100;
-                if (valueOne == valueTwo) {
-                    data.setSla(100F);
-                } else {
-                    data.setSla(valueOne / valueTwo); //вычислить % SLA
-                }
+                do {
+                    TestData testData = new TestData();
+                    testData.setTitle(cursor.getString(1)); //достать из курсора навание области
+                    count = cursor.getFloat(2); //достать из курсора сумму count
+                    violation = cursor.getFloat(3);
+
+                    testData.setProcessed((int) count);
+                    testData.setViolation((int) violation);
+                    if (count != 0) {
+                        float valueOne = (count - violation);
+                        float valueTwo = count/100;
+                        testData.setSla(valueOne / valueTwo);
+                    }
+                    if (testData.getTitle() != null || !testData.getTitle().contains("МОСКВА ОКРУГ")) {
+                        data.add(testData);
+                    }
+                } while (cursor.moveToNext());
             }
         }
         cursor.close();
         return data;
     }
+
+    DatePickerDialog.OnDateSetListener dateSetListenerFrom = new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            setYear = year;
+            setMonth = month;
+            setDayOfMonth = dayOfMonth;
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar calendar = new GregorianCalendar(setYear, setMonth, setDayOfMonth);
+            dateFrom = df.format(calendar.getTime());
+            btnDateFrom.setTextSize(14);
+            btnDateFrom.setText("От: " + dateFrom);
+        }
+    };
+
+
+    DatePickerDialog.OnDateSetListener dateSetListenerBefore = new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            setYear = year;
+            setMonth = month;
+            setDayOfMonth = dayOfMonth;
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar calendar = new GregorianCalendar(setYear, setMonth, setDayOfMonth);
+            dateBefore = df.format(calendar.getTime());
+            btnDateBefore.setTextSize(14);
+            btnDateBefore.setText("До: " + dateBefore);
+        }
+    };
 
     //инициализайя RecyclerView
     private void initRecyclerView(List<TestData> testData) {
@@ -154,13 +242,6 @@ public class DistrictsFragment extends Fragment {
         adapter = new AdapterDetailsList(getContext(), testData);
         tableRV.setLayoutManager(layoutManager);
         tableRV.setAdapter(adapter);
-    }
-
-    //инициализация Spinner
-    private void initSpinner() {
-        String[] period = {"За все время", "За последние 7 дней", "За месяц", "За 3 месяца", "За 6 месяцев", "За последний год"};
-        SpinnerAdapterPeriod adapterPeriod = new SpinnerAdapterPeriod(getContext(), R.layout.row_spinner, period);
-        periodSpinner.setAdapter(adapterPeriod);
     }
 
     public static DistrictsFragment newInstance(int data) {

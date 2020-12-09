@@ -71,7 +71,7 @@ public class ChartGraf {
         dynamicChart.setTouchEnabled(false);
         dynamicChart.animateY(1000);
         dynamicChart.setExtraOffsets(0,0, 0,100);
-        dynamicChart.getLegend().setEnabled(false);
+        dynamicChart.getLegend().setEnabled(true);
 
         XAxis xAxis = dynamicChart.getXAxis();
         xAxis.setDrawLabels(false);

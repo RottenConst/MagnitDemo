@@ -1,12 +1,14 @@
 package ru.optimum.load.magnitdemo.screen.main.details.fragments.processd;
 
+import android.app.DatePickerDialog;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.Spinner;
+import android.widget.Button;
+import android.widget.DatePicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,17 +16,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
-import ru.optimum.load.magnitdemo.DBContact;
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
-import ru.optimum.load.magnitdemo.data.DataOnCardView;
 import ru.optimum.load.magnitdemo.data.TestData;
 import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
 import ru.optimum.load.magnitdemo.screen.adapters.AdapterDetailsList;
-import ru.optimum.load.magnitdemo.screen.adapters.SpinnerAdapterPeriod;
 
 public class GroupFragment extends Fragment {
 
@@ -32,7 +35,15 @@ public class GroupFragment extends Fragment {
     RecyclerView tableGroupRV;
     AdapterDetailsList adapter;
     LinearLayoutManager layoutManager;
-    Spinner periodGroup;
+    Calendar calendar;
+    int setYear;
+    int setMonth;
+    int setDayOfMonth;
+    String dateFrom;
+    String dateBefore;
+    Button btnSetDateFrom;
+    Button btnSetDateBefore;
+    Button btnShowData;
     private DatabaseWrapper dbWrapper;
 
     @Nullable
@@ -40,47 +51,32 @@ public class GroupFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.group_fragment, container, false);
         tableGroupRV = view.findViewById(R.id.table_recycler_group);
-        periodGroup = view.findViewById(R.id.period_spinner_group);
+        btnSetDateFrom = view.findViewById(R.id.btn_group_set_date_from);
+        btnSetDateBefore = view.findViewById(R.id.btn_group_set_date_before);
+        btnShowData = view.findViewById(R.id.btn_group_show_data);
+
+        calendar = Calendar.getInstance();
+        setYear = calendar.get(Calendar.YEAR);
+        setMonth = calendar.get(Calendar.MONTH);
+        setDayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+        dateFrom = "2020-01-01";
+        dateBefore = setYear + "-" + setMonth + "-" + setDayOfMonth;
         dbWrapper = DemoApp.dbWrapper();
-        initSpinner();
 
-        initRV(getTestData(""));
+        initRV(getTestData("2020-01-01", "2020-12-31"));
 
-        periodGroup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        adapter.setTestData(getTestData(""));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 1:
-                        adapter.setTestData(getTestData("2020-10-07"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 2:
-                        adapter.setTestData(getTestData("2020-10-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 3:
-                        adapter.setTestData(getTestData("2020-08-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 4:
-                        adapter.setTestData(getTestData("2020-06-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                    case 5:
-                        adapter.setTestData(getTestData("2020-01-01"));
-                        adapter.notifyDataSetChanged();
-                        break;
-                }
-            }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        btnSetDateFrom.setOnClickListener(v -> {
+            new DatePickerDialog(getContext(), dateSetListenerFrom, setYear, setMonth, setDayOfMonth).show();
+        });
 
-            }
+        btnSetDateBefore.setOnClickListener(v -> {
+            new DatePickerDialog(getContext(), DateSetListenerTwo, setYear, setMonth, setDayOfMonth).show();
+        });
+
+        btnShowData.setOnClickListener(v -> {
+            adapter.setTestData(getTestData(dateFrom, dateBefore));
+            adapter.notifyDataSetChanged();
         });
 
         return view;
@@ -99,70 +95,78 @@ public class GroupFragment extends Fragment {
         tableGroupRV.setAdapter(adapter);
     }
 
-    private void initSpinner() {
-        String[] period = {"За все время", "За последние 7 дней", "За месяц", "За 3 месяца", "За 6 месяцев", "За последний год"};
-        SpinnerAdapterPeriod adapterPeriod = new SpinnerAdapterPeriod(getContext(), R.layout.row_spinner, period);
-        periodGroup.setAdapter(adapterPeriod);
-    }
-
-    private List<TestData> getTestData(String date){
+    private List<TestData> getTestData(String dateFrom, String dateBefore){
         List<TestData> testData = new ArrayList<>();
         if (dataDB == 1) {
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета поступления%", date))); //запрос из бд 
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета аренды%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета оптовой%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета непериодических услуг%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета ввода%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета банковских%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор документального%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор централизованных%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupOpenSet("Сектор учета периодических%", date)));
+            testData = getGroupValue(dbWrapper.getValueOfGroupOpenSet(dateFrom, dateBefore));
         } else if (dataDB == 2) {
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор учета аренды%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор учета оптовой%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор учета непериодических услуг%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор документального%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор учета банковских%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор учета периодических%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор учета поступления%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupProcessedSed("Сектор централизованных%", date)));
+            testData = getGroupValue(dbWrapper.getValueOfGroupProcessedSet(dateFrom, dateBefore));
         } else if (dataDB == 3) {
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета аренды%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета оптовой%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета непериодических услуг%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета ввода%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор документального%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета периодических%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета банковских%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор централизованных%", date)));
-            testData.add(getGroupValue(dbWrapper.getValueOfGroupReceiptSet("Сектор учета поступления%", date)));
+            testData = getGroupValue(dbWrapper.getValueOfGroupReceiptSet(dateFrom, dateBefore));
         }
         return testData;
     }
 
-    private TestData getGroupValue(Cursor cursor) {
-        TestData data = new TestData();
-        float count = 0;
-        float violation = 0;
-
+    private List<TestData> getGroupValue(Cursor cursor) {
+        List<TestData> data = new ArrayList<>();
+        float count;
+        float violation;
 
         if (cursor != null) {
             if (cursor.moveToFirst()) {
-                data.setTitle(cursor.getString(1));
-                count = cursor.getFloat(2);
-                violation = cursor.getFloat(3);
-            }
-            data.setProcessed((int) count);
-            data.setViolation((int) violation);
-            if (count != 0) {
-                float valueOne = (count - violation);
-                float valueTwo = count/100;
-                data.setSla(valueOne / valueTwo);
+                do {
+                    TestData testData = new TestData();
+                    testData.setTitle(cursor.getString(1));
+                    count = cursor.getFloat(2);
+                    violation = cursor.getFloat(3);
+
+                    testData.setProcessed((int) count);
+                    testData.setViolation((int) violation);
+                    if (count != 0) {
+                        float valueOne = (count - violation);
+                        float valueTwo = count/100;
+                        testData.setSla(valueOne / valueTwo);
+                    }
+                    if (testData.getTitle() != null) {
+                        data.add(testData);
+                    }
+                    Log.d("DATE", cursor.getString(1) + " " + cursor.getString(2) + " " + cursor.getString(3));
+                } while (cursor.moveToNext());
             }
         }
         cursor.close();
         return data;
     }
+
+
+
+    DatePickerDialog.OnDateSetListener dateSetListenerFrom = new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            setYear = year;
+            setMonth = month;
+            setDayOfMonth = dayOfMonth;
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar calendar = new GregorianCalendar(setYear, setMonth, setDayOfMonth);
+            dateFrom = df.format(calendar.getTime());
+            btnSetDateFrom.setTextSize(14);
+            btnSetDateFrom.setText("От: " + dateFrom);
+        }
+    };
+
+    DatePickerDialog.OnDateSetListener DateSetListenerTwo = new DatePickerDialog.OnDateSetListener() {
+        @Override
+        public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+            setYear = year;
+            setMonth = month;
+            setDayOfMonth = dayOfMonth;
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar calendar = new GregorianCalendar(setYear, setMonth, setDayOfMonth);
+            dateBefore = df.format(calendar.getTime());
+            btnSetDateBefore.setTextSize(14);
+            btnSetDateBefore.setText("До: " + dateBefore);
+        }
+    };
 
     public static GroupFragment newInstance(int data) {
         dataDB = data;

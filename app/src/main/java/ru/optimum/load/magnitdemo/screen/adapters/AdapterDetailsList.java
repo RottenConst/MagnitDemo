@@ -47,6 +47,7 @@ public class AdapterDetailsList extends RecyclerView.Adapter<AdapterDetailsList.
     }
 
     public void setTestData(List<TestData> testData) {
+        this.testData.clear();
         this.testData = testData;
     }
 
