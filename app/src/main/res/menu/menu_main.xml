@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<!--    <item-->
+<!--        android:id="@+id/alarm"-->
+<!--        android:orderInCategory="100"-->
+<!--        android:icon="@drawable/ic_alarm_set"-->
+<!--        android:title="@string/menu_account"-->
+<!--        app:showAsAction="ifRoom" />-->
+
+    <item android:id="@+id/set_view"
+        android:title="@string/menu_set_view"
+        android:icon="@drawable/ic_grafic_set"
+        app:showAsAction="always"/>
+
+<!--    <item-->
+<!--        android:id="@+id/account_button"-->
+<!--        android:orderInCategory="100"-->
+<!--        android:title="@string/menu_account"-->
+<!--        android:icon="@drawable/ic_account_circle"-->
+<!--        app:showAsAction="always"/>-->
 
 </menu>

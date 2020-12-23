@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/details_container"
+    android:id="@+id/tab_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -19,5 +19,6 @@
         app:itemIconTint="@color/bottom_navigation_item_colors"
         app:itemTextColor="@color/bottom_navigation_item_colors"
         app:menu="@menu/menu_bottom_navigation_details" />
+
 
 </FrameLayout>

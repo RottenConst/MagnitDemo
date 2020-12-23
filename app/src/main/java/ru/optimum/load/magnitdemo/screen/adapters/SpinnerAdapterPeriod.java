@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.data.DataOnCardView;
@@ -22,9 +23,9 @@ import ru.optimum.load.magnitdemo.data.TestData;
 public class SpinnerAdapterPeriod extends ArrayAdapter<String> {
 
     private final Context context;
-    String[] periods;
+    List<String> periods;
     
-    public SpinnerAdapterPeriod(@NonNull Context context, int resource, @NonNull String[] objects) {
+    public SpinnerAdapterPeriod(@NonNull Context context, int resource, @NonNull List<String> objects) {
         super(context, resource, objects);
         this.context = context;
         this.periods = objects;
@@ -45,7 +46,7 @@ public class SpinnerAdapterPeriod extends ArrayAdapter<String> {
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.row_spinner, parent, false);
         TextView label = view.findViewById(R.id.tv_interval);
-        label.setText(periods[position]);
+        label.setText(periods.get(position));
 
         ImageView icon = view.findViewById(R.id.ic_calendar);
         icon.setImageResource(R.drawable.ic_calendar);

@@ -5,11 +5,17 @@
     <color name="colorAccent">#03DAC5</color>
 
     <color name="redPrimary">#E30119</color>
-    <color name="redPrimaryDark">#292D3E</color>
+    <color name="redPrimaryDark">#872630</color>
     <color name="redAccent">#E301C5</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="white">#ffffff</color>
-    <color name="grey">#F3EDED</color>
+    <color name="grey">#A69F9F</color>
     <color name="shadow">#0CFFFFFF</color>
+    <color name="black">#000000</color>
     <color name="greenChart">#00897B</color>
+
+    <color name="cardViewOpen">#5E35B1</color>
+    <color name="cardViewReceived">#039BE5</color>
+    <color name="cardViewInWork">#FFB300</color>
+    <color name="cardViewComplete">#4EAE52</color>
 </resources>

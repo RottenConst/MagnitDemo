@@ -60,5 +60,21 @@
     <string name="show_date">Показать</string>
     <string name="setPeriod">Выбрать начало периода</string>
     <string name="setEndPeriod">выбрать конец периода</string>
+    <string name="filters">Фильтры</string>
+    <string name="monitoring">Мониторинг</string>
+    <string name="reports">Отчеты</string>
+    
+    <string name="menu_alarms">Уведомления</string>
+    <string name="menu_set_view">Отображение</string>
+    <string name="menu_account">Аккаунт</string>
+    <string name="apply">Применить</string>
+    <string name="all">Все</string>
+    <string name="Clear_filter">Очистить фильтры</string>
+    <string name="districts">Округа</string>
+    <string name="Company">Организация</string>
+    <string name="filiate">Филиал</string>
+    <string name="type_complect">Тип комплекта</string>
+    <string name="group_process">Группа обработки</string>
+    <string name="podrasdelenie">Подразделение</string>
 
 </resources>
