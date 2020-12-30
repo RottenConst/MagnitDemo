@@ -76,5 +76,10 @@
     <string name="type_complect">Тип комплекта</string>
     <string name="group_process">Группа обработки</string>
     <string name="podrasdelenie">Подразделение</string>
+    <string name="message_is_empy">Что-то тут пустовато...
+                                    Выбирите отчет</string>
+    <string name="report_not_enable">Отчет не выбран</string>
+    <string name="null_number">0</string>
+    <string name="Date">Ничего не выбранно</string>
 
 </resources>

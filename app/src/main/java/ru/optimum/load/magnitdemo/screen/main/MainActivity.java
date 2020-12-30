@@ -1,46 +1,19 @@
 package ru.optimum.load.magnitdemo.screen.main;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
-import android.app.DatePickerDialog;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.DatePicker;
-import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.zip.Inflater;
-
-import ru.optimum.load.magnitdemo.DBContact;
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
 import ru.optimum.load.magnitdemo.app.SyncManager;
-import ru.optimum.load.magnitdemo.data.MainData;
-import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
-import ru.optimum.load.magnitdemo.screen.adapters.GridAdapterCard;
-import ru.optimum.load.magnitdemo.screen.adapters.SpinnerAdapterPeriod;
 import ru.optimum.load.magnitdemo.screen.main.details.fragments.MonitoringFragment;
-import ru.optimum.load.magnitdemo.screen.main.details.fragments.processd.DynamicFragment;
+import ru.optimum.load.magnitdemo.screen.main.details.fragments.ReportsFragment;
 
 /*
     Главный экран приложения
@@ -49,15 +22,32 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
 
     private static boolean firstStart = true;
     BottomNavigationView navigationView;
+    ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        actionBar = getSupportActionBar();
         DemoApp.syncManager().setSyncStatusListener(this);// регистрируем слушатель синхранизации
 
         navigationView = findViewById(R.id.navigation_details);
 
+        navigationView.setOnNavigationItemSelectedListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.monitoring:
+                    navigationView.getMenu().getItem(0).setChecked(true);
+                    actionBar.setTitle("Мониторинг");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.tab_container, MonitoringFragment.newInstance()).commit();
+                    break;
+                case R.id.reports:
+                    navigationView.getMenu().getItem(1).setChecked(true);
+                    actionBar.setTitle("Отчеты");
+                    getSupportFragmentManager().beginTransaction().replace(R.id.tab_container, ReportsFragment.newInstance()).commit();
+                    break;
+            }
+            return false;
+        });
 
     }
 
@@ -78,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
         }
     }
 
-       //вывод сообщений о статусе синхранизации с платформой
+    //вывод сообщений о статусе синхранизации с платформой
     @Override
     public void updateSyncStatus(SyncManager.SyncStatus status) {
         if (status.started) {
@@ -87,14 +77,14 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
         } else {
             String strResult = (status.lastSyncResult != null) ? status.lastSyncResult.name() : "No result";
             String strError = (status.lastSyncError != null) ? status.lastSyncResult.name() : "No error";
-            showToast("SYNC RESULT: "+ strResult + ":" + strError);
+            showToast("SYNC RESULT: " + strResult + ":" + strError);
             onRefresh();
         }
 
     }
 
     //вывод сообщений
-    private void showToast (String message) {
+    private void showToast(String message) {
         Toast toast = Toast.makeText(this, message, Toast.LENGTH_LONG);
         toast.show();
     }
@@ -102,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
     @Override
     public void onRefresh() {
         navigationView.getMenu().getItem(0).setChecked(true);
+        actionBar.setTitle("Мониторинг");
         getSupportFragmentManager().beginTransaction().replace(R.id.tab_container, MonitoringFragment.newInstance()).commit();
     }
 }

@@ -30,13 +30,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".screen.main.details.DetailsActivity"
-            android:parentActivityName=".screen.main.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.GET_CONTENT" />
-                <category android:name="android.intent.category.HOME" />
-            </intent-filter>
-        </activity>
     </application>
 
 </manifest>

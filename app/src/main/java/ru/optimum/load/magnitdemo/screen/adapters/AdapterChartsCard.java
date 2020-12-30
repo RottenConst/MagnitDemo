@@ -2,8 +2,8 @@ package ru.optimum.load.magnitdemo.screen.adapters;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.DashPathEffect;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,20 +15,22 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.IFillFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.interfaces.dataprovider.LineDataProvider;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.github.mikephil.charting.utils.Utils;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
@@ -89,6 +91,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
         TextView titleCard;
         TextView tvCountCard;
         ImageView ivArrow;
+        TextView tvDateOfCount;
 
         public ChartsHolder(@NonNull View itemView, boolean enableChartCard) {
             super(itemView);
@@ -98,6 +101,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                 titleCard = itemView.findViewById(R.id.tv_title_card);
                 tvCountCard = itemView.findViewById(R.id.tv_count_card);
                 ivArrow = itemView.findViewById(R.id.iv_arrow);
+                tvDateOfCount = itemView.findViewById(R.id.tv_date_of_number);
             } else {
                 cardView = itemView.findViewById(R.id.cv_of_data);
                 titleCard = itemView.findViewById(R.id.tv_name_data);
@@ -115,7 +119,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewOpen));
                     titleCard.setText(data.getTitle());
                     tvCountCard.setText(String.valueOf(data.getCount()));
-                    if (data.getCounts().get(0) > data.getCounts().get(lastIndex)) {
+                    if (data.getCounts().get(0).second > data.getCounts().get(lastIndex).second) {
                         ivArrow.setImageResource(R.drawable.ic_arrow_red_down);
                     } else if (data.getCounts().get(0).equals(data.getCounts().get(lastIndex))) {
                         ivArrow.setImageResource(R.color.white);
@@ -128,7 +132,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     titleCard.setText(data.getTitle());
                     tvCountCard.setText(String.valueOf(data.getCount()));
 
-                    if (data.getCounts().get(0) > data.getCounts().get(lastIndex)) {
+                    if (data.getCounts().get(0).second > data.getCounts().get(lastIndex).second) {
                         ivArrow.setImageResource(R.drawable.ic_arrow_red_down);
                     } else if (data.getCounts().get(0).equals(data.getCounts().get(lastIndex))) {
                         ivArrow.setImageResource(R.color.white);
@@ -138,7 +142,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewInWork));
                     titleCard.setText(data.getTitle());
                     tvCountCard.setText(String.valueOf(data.getCount()));
-                    if (data.getCounts().get(0) > data.getCounts().get(lastIndex)) {
+                    if (data.getCounts().get(0).second > data.getCounts().get(lastIndex).second) {
                         ivArrow.setImageResource(R.drawable.ic_arrow_red_down);
                     } else if (data.getCounts().get(0).equals(data.getCounts().get(lastIndex))) {
                         ivArrow.setImageResource(R.color.white);
@@ -151,7 +155,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     titleCard.setText(data.getTitle());
                     tvCountCard.setText(String.valueOf(data.getCount()));
 
-                    if (data.getCounts().get(0) > data.getCounts().get(lastIndex)) {
+                    if (data.getCounts().get(0).second > data.getCounts().get(lastIndex).second) {
                         ivArrow.setImageResource(R.drawable.ic_arrow_red_down);
                     } else if (data.getCounts().get(0).equals(data.getCounts().get(lastIndex))) {
                         ivArrow.setImageResource(R.color.white);
@@ -168,7 +172,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
             titleCard.setText(chartData.getTitle());
             tvCountCard.setText(String.valueOf(chartData.getCount()));
             int lastIndex = chartData.getCounts().size() - 1;
-            if (chartData.getCounts().get(0) > chartData.getCounts().get(lastIndex)) {
+            if (chartData.getCounts().get(0).second > chartData.getCounts().get(lastIndex).second) {
                 ivArrow.setImageResource(R.drawable.ic_arrow_red_down);
             } else if (chartData.getCounts().get(0).equals(chartData.getCounts().get(lastIndex))) {
                 ivArrow.setImageResource(R.color.white);
@@ -222,9 +226,14 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
 
         private void setDataChart(ChartData chartData) {
             ArrayList<Entry> values = new ArrayList<>();
-            ArrayList<Integer> counts = chartData.getCounts();
+            List<Pair<String, Integer>> counts = chartData.getCounts();
             for (int i = 0; i < chartData.getCounts().size(); i++) {
-                values.add(new Entry(i, counts.get(i)));
+                String[] date = counts.get(i).first.split("-");
+                int year = Integer.parseInt(date[0]);
+                int month = Integer.parseInt(date[1]);
+                int day = Integer.parseInt(date[2]);
+                Calendar mDate = new GregorianCalendar(year, month - 1, day);
+                values.add(new Entry(i, counts.get(i).second, mDate.getTime()));
             }
 
             LineDataSet lineData;
@@ -250,8 +259,8 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
 
         @Override
         public void onValueSelected(Entry e, Highlight h) {
-            int value = (int) e.getY();
-
+            DateFormat df = new SimpleDateFormat("dd MMMM yyyy");
+            tvDateOfCount.setText(df.format(e.getData()) + " года");
             Log.i("Entry selected", e.toString());
             Log.i("LOW HIGH", "low: " + chart.getLowestVisibleX() + ", high: " + chart.getHighestVisibleX());
             Log.i("MIN MAX", "xMin: " + chart.getXChartMin() + ", xMax: " + chart.getXChartMax() + ", yMin: " + chart.getYChartMin() + ", yMax: " + chart.getYChartMax());
@@ -259,7 +268,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
 
         @Override
         public void onNothingSelected() {
-
+            tvDateOfCount.setText("Ничего не выбрано");
         }
     }
 }

@@ -2,36 +2,20 @@ package ru.optimum.load.magnitdemo.screen.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.github.mikephil.charting.animation.Easing;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.data.ChartData;
-import ru.optimum.load.magnitdemo.data.DataOnCardView;
-import ru.optimum.load.magnitdemo.data.MainData;
-import ru.optimum.load.magnitdemo.screen.main.details.DetailsActivity;
+
 /*
     Адаптер для отображения общих данных на главном экране
  */
@@ -41,7 +25,7 @@ public class GridAdapterCard extends RecyclerView.Adapter<GridAdapterCard.GridHo
     private final Context context;
     private List<ChartData> data;
 
-    public GridAdapterCard(Context context, List<ChartData> data){
+    public GridAdapterCard(Context context, List<ChartData> data) {
         this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.data = data;

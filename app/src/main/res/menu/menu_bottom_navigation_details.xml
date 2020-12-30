@@ -2,12 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/dynamics"
+        android:id="@+id/monitoring"
         android:icon="@drawable/shape_oval"
         android:title="@string/monitoring"
         app:showAsAction="collapseActionView"/>
     <item
-        android:id="@+id/districts"
+        android:id="@+id/reports"
         android:icon="@drawable/shape_oval"
         android:title="@string/reports"
         app:showAsAction="collapseActionView" />

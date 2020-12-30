@@ -11,12 +11,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
-import ru.optimum.load.magnitdemo.data.DataOnCardView;
-import ru.optimum.load.magnitdemo.data.TestData;
+
 /*
     Адаптер для кастомного спинера
  */
@@ -44,7 +42,7 @@ public class SpinnerAdapterPeriod extends ArrayAdapter<String> {
 
     public View getCustomView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.row_spinner, parent, false);
+        View view = inflater.inflate(R.layout.row_spinner_period, parent, false);
         TextView label = view.findViewById(R.id.tv_interval);
         label.setText(periods.get(position));
 

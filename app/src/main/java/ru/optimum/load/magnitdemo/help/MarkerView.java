@@ -1,5 +1,6 @@
 package ru.optimum.load.magnitdemo.help;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.widget.TextView;
 
@@ -27,6 +28,7 @@ public class MarkerView extends com.github.mikephil.charting.components.MarkerVi
         tvContent = findViewById(R.id.tvContent);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void refreshContent(Entry e, Highlight highlight) {
         if (e instanceof CandleEntry) {

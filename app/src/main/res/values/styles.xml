@@ -28,8 +28,8 @@
     </style>
 
     <style name="progressLine" parent="Widget.AppCompat.ProgressBar.Horizontal">
-        <item name="android:progressTint" tools:targetApi="lollipop">@color/redPrimary</item>
-        <item name="android:scaleY">8</item>
+        <item name="android:progressTint" tools:targetApi="lollipop">@color/cardViewComplete</item>
+        <item name="android:scaleY">5</item>
     </style>
 
 </resources>

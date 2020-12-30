@@ -2,9 +2,14 @@ package ru.optimum.load.magnitdemo.db;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+import android.util.Pair;
 
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.List;
+
+import ru.optimum.load.magnitdemo.data.Report;
 
 import static ru.optimum.load.magnitdemo.DBContact.*;
 
@@ -16,19 +21,6 @@ public class DatabaseWrapper {
 
     public DatabaseWrapper(SQLiteDatabase db) {
         this.db = db;
-    }
-
-    //получить сумму всех значений SLA 75% из таблицы
-    public int getSla75Expired(String tableName, String dateFrom, String dateBefore) {
-        Cursor cursor = db.query(tableName, new String[]{"date(STATESTARTDATE)", "sum(SLA75ExpiredCount)"}, "date(STATESTARTDATE) BETWEEN ? AND ?", new String[] {dateFrom, dateBefore}, null, null, null);
-        int SLA75Expired = 0;
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                SLA75Expired += cursor.getInt(1);
-            }
-            cursor.close();
-        }
-        return SLA75Expired;
     }
 
     public String getMaxDate() {
@@ -73,27 +65,33 @@ public class DatabaseWrapper {
         return count;
     }
 
-    public ArrayList<Integer> getCountsOf(String tablename, String dateFrom, String dateBefore) {
+    public List<Pair<String, Integer>> getCountsOf(String tablename, String dateFrom, String dateBefore) {
         String[] projection = {
+                "date(" + OpenSet.COLUMN_STATESTARTDATE + ")",
                 "sum(Count)"
         };
         String selection = "date(" + OpenSet.COLUMN_STATESTARTDATE + ") BETWEEN ? AND ?";
         String[] selectionArg = {dateFrom, dateBefore};
         String groupBy = OpenSet.COLUMN_STATESTARTDATE;
         Cursor cursor = db.query(tablename, projection, selection, selectionArg, groupBy, null, null);
-        ArrayList<Integer> counts = new ArrayList<>();
+        List<Pair<String, Integer>> counts = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
             do {
-                counts.add(cursor.getInt(0));
+                if (cursor.getCount() == 0) {
+                    counts.add(new Pair<>("", 0));
+                } else {
+                    counts.add(new Pair<>(cursor.getString(0), cursor.getInt(1)));
+                }
             }while (cursor.moveToNext());
             cursor.close();
         }
         return counts;
     }
 
-    public ArrayList<Integer> getCompleteCounts(String dateFrom, String dateBefore) {
+    public List<Pair<String, Integer>> getCompleteCounts(String dateFrom, String dateBefore) {
         String[] projection = {
+                "date(" + ProcessedSet.COLUMN_STATESTARTDATE +")",
                 "sum(" + ProcessedSet.COLUMN_COUNT + ")",
                 "sum(" + ProcessedSet.COLUMN_PROCESS_STATE_COUNT + ")"
         };
@@ -101,32 +99,41 @@ public class DatabaseWrapper {
         String[] selectionArg = {dateFrom, dateBefore};
         String groupBy = ProcessedSet.COLUMN_STATESTARTDATE;
         Cursor cursor = db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-        ArrayList<Integer> complete = new ArrayList<>();
+        List<Pair<String, Integer>> complete = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
             do {
-                int count = cursor.getInt(0);
-                int inWork = cursor.getInt(1);
-                complete.add(count - inWork);
+                if (cursor.getCount() == 0) {
+                    complete.add(new Pair<>("", 0));
+                } else {
+                    int count = cursor.getInt(1);
+                    int inWork = cursor.getInt(2);
+                    complete.add(new Pair<>(cursor.getString(0), count - inWork));
+                }
             } while (cursor.moveToNext());
             cursor.close();
         }
         return complete;
     }
 
-    public ArrayList<Integer> getInWorkCounts(String dateFrom, String dateBefore) {
+    public List<Pair<String, Integer>> getInWorkCounts(String dateFrom, String dateBefore) {
         String[] projection = {
+                "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ")",
                 "sum(" + ProcessedSet.COLUMN_PROCESS_STATE_COUNT + ")"
         };
         String selection = "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ") BETWEEN ? AND ?";
         String[] selectionArg = {dateFrom, dateBefore};
         String groupBy = ProcessedSet.COLUMN_STATESTARTDATE;
         Cursor cursor = db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-        ArrayList<Integer> inWork = new ArrayList<>();
+        List<Pair<String,Integer>> inWork = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
             do {
-                inWork.add(cursor.getInt(0));
+                if (cursor.getCount() == 0) {
+                    inWork.add(new Pair<>("", 0));
+                } else {
+                    inWork.add(new Pair<>(cursor.getString(0), cursor.getInt(1)));
+                }
             } while (cursor.moveToNext());
             cursor.close();
         }
@@ -276,22 +283,23 @@ public class DatabaseWrapper {
         return districts;
     }
 
-    public ArrayList<Integer> getCountsWithFilter(String tableName, String filter, String[] filterArg) {
+    public List<Pair<String,Integer>> getCountsWithFilter(String tableName, String filter, String[] filterArg) {
         String[] projections = {
+                "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ")",
                 "sum(Count)"
         };
         String selection = filter;
         String[] selectionArg = filterArg;
         String groupBy = OpenSet.COLUMN_STATESTARTDATE;
         Cursor cursor = db.query(tableName, projections, selection, selectionArg, groupBy, null, null);
-        ArrayList<Integer> counts = new ArrayList<>();
+        List<Pair<String,Integer>> counts = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
             do {
                 if (cursor.getCount() == 0) {
-                    counts.add(0);
+                    counts.add(new Pair<>("",0));
                 } else {
-                    counts.add(cursor.getInt(0));
+                    counts.add(new Pair<>(cursor.getString(0), cursor.getInt(1)));
                 }
             }while (cursor.moveToNext());
             cursor.close();
@@ -335,22 +343,23 @@ public class DatabaseWrapper {
         return counts;
     }
 
-    public ArrayList<Integer> getInWorkCountsWithFilter(String filter, String[] filterArg) {
+    public List<Pair<String,Integer>> getInWorkCountsWithFilter(String filter, String[] filterArg) {
         String[] projection = {
+                "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ")",
                 "sum(" + ProcessedSet.COLUMN_PROCESS_STATE_COUNT + ")"
         };
         String selection = filter;
         String[] selectionArg = filterArg;
         String groupBy = ProcessedSet.COLUMN_STATESTARTDATE;
         Cursor cursor = db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-        ArrayList<Integer> inWork = new ArrayList<>();
+        List<Pair<String,Integer>> inWork = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
             do {
                 if (cursor.getCount() == 0) {
-                    inWork.add(0);
+                    inWork.add(new Pair<>("",0));
                 } else {
-                    inWork.add(cursor.getInt(0));
+                    inWork.add(new Pair<>(cursor.getString(0), cursor.getInt(0)));
                 }
             } while (cursor.moveToNext());
             cursor.close();
@@ -358,8 +367,9 @@ public class DatabaseWrapper {
         return inWork;
     }
 
-    public ArrayList<Integer> getCompleteCountsWithFilter(String filter, String[] filterArg) {
+    public List<Pair<String,Integer>> getCompleteCountsWithFilter(String filter, String[] filterArg) {
         String[] projection = {
+                "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ")",
                 "sum(" + ProcessedSet.COLUMN_COUNT + ")",
                 "sum(" + ProcessedSet.COLUMN_PROCESS_STATE_COUNT + ")"
         };
@@ -367,16 +377,16 @@ public class DatabaseWrapper {
         String[] selectionArg = filterArg;
         String groupBy = ProcessedSet.COLUMN_STATESTARTDATE;
         Cursor cursor = db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-        ArrayList<Integer> complete = new ArrayList<>();
+        List<Pair<String,Integer>> complete = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
             do {
                 if (cursor.getCount() == 0) {
-                    complete.add(0);
+                    complete.add(new Pair<>("",0));
                 } else {
-                    int count = cursor.getInt(0);
-                    int inWork = cursor.getInt(1);
-                    complete.add(count - inWork);
+                    int count = cursor.getInt(1);
+                    int inWork = cursor.getInt(2);
+                    complete.add(new Pair<>(cursor.getString(0), count - inWork));
                 }
             } while (cursor.moveToNext());
             cursor.close();
@@ -384,229 +394,55 @@ public class DatabaseWrapper {
         return complete;
     }
 
-    //получить сумму всех значений SLA из таблицы
-    public int getSlaExpired(String tableName, String dateFrom, String dateBefore) {
-        Cursor cursor = db.query(tableName, new String[]{"date(STATESTARTDATE)", "sum(SLAExpiredCount)"}, "date(STATESTARTDATE) BETWEEN ? AND ?", new String[] {dateFrom, dateBefore}, null, null, null);
-        int openSLAExpired = 0;
+   
+    public ArrayList<Report> getReportTopOperator() {
+        String[] projection = {
+                ProcessedSet.COLUMN_PROCESSING_OPERATOR,
+                "sum(" + ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT + ")",
+                "sum(" + ReceiptSet.COLUMN_SLA_EXPIRED_COUNT + ")"
+        };
+        String tables = ProcessedSet.TABLE_NAME + ", " + ReceiptSet.TABLE_NAME;
+        String groupBy = ProcessedSet.COLUMN_PROCESSING_OPERATOR;
+        Cursor cursor = db.query(tables, projection, null, null, groupBy, null, null);
+        ArrayList<Report> reports = new ArrayList<>();
         if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                openSLAExpired += cursor.getInt(1);
-            }
+            cursor.moveToFirst();
+            do {
+                String name = cursor.getString(0);
+                int sla = cursor.getInt(1);
+                int slaExpiredCount = cursor.getInt(2);
+                if (!name.equals(" ") || !name.contains("N/A")) {
+                    reports.add(new Report(name, sla, sla + slaExpiredCount));
+                }
+            }while (cursor.moveToNext());
+            cursor.close();
         }
-        cursor.close();
-        return openSLAExpired;
+        return reports;
     }
 
-    //получить сумму всех значений Count из таблицы
-    public int getCount(String tableName, String dateFrom, String dateBefore) {
-        String[] projections = {
-                "sum(Count)"
-        };
-        String selection = "date(" + OpenSet.COLUMN_STATESTARTDATE + ") BETWEEN ? AND ?";
-        String[] selectionArg = {dateFrom, dateBefore};
-        Cursor cursor = db.query(tableName,  projections, selection, selectionArg, null, null, null);
-        int openCount = 0;
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                openCount = cursor.getInt(0);
-            }
-        }
-        cursor.close();
-        return openCount;
-    }
-
-    //Получить сумму всех значений SlaNotExpired из таблицы ProcessedSet
-    public int getSlaNotExpired(String dateFrom, String dateBefore) {
-        Cursor cursor = db.query(ProcessedSet.TABLE_NAME, new String[]{"date("+ ProcessedSet.COLUMN_STATESTARTDATE+")", "sum("+ ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT+")"}, "date(STATESTARTDATE) BETWEEN ? AND ?", new String[] {dateFrom, dateBefore}, null, null, null);
-        int openSLAExpired = 0;
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                openSLAExpired = cursor.getInt(1);
-            }
-        }
-        cursor.close();
-        return openSLAExpired;
-    }
-
-    //получаем знчения по области и дате, таблицы ProcessedSet
-    public Cursor getValueOfDistrictProcessedSed(String dateFrom, String dateBefore) {
+    public ArrayList<Report> getReportToGroupTop() {
         String[] projection = {
-                "date("+ ProcessedSet.COLUMN_STATESTARTDATE+")",
-                ProcessedSet.COLUMN_DISTRICT,
-                "sum("+ ProcessedSet.COLUMN_COUNT+")",
-                "sum("+ ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT+")"
-        };
-        String selection = "date("+ ProcessedSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?";
-        String[] selectionArg = {dateFrom, dateBefore};
-        String groupBy = ProcessedSet.COLUMN_DISTRICT;
-        return db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-    }
-
-    //
-    public Cursor getValueOfGroupProcessedSet(String dateFrom, String dateBefore) {
-        String[] projection = {
-                "date("+ ProcessedSet.COLUMN_STATESTARTDATE+")",
-                ProcessedSet.COLUMN_UNIT_NAME,
-                "sum("+ ProcessedSet.COLUMN_COUNT+")",
-                "sum("+ ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT+")"
-        };
-        String selection = "date("+ ProcessedSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?";
-        String[] selectionArg = {dateFrom, dateBefore};
-        String groupBy = ProcessedSet.COLUMN_UNIT_NAME;
-        return db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-    }
-
-    public Cursor getValueOfDistrictReceiptSet(String dateFrom , String dateBefore) {
-        String[] projection = {
-                "date("+ ReceiptSet.COLUMN_STATESTARTDATE+")",
-                ReceiptSet.COLUMN_DISTRICT,
-                "sum("+ ReceiptSet.COLUMN_COUNT+")",
-                "sum("+ ReceiptSet.COLUMN_SLA_EXPIRED_COUNT+")"
-        };
-        String selection = "date("+ ReceiptSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?";
-        String[] selectionArg = {dateFrom, dateBefore};
-        String groupBy = ReceiptSet.COLUMN_DISTRICT;
-        return db.query(ReceiptSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-    }
-
-    public Cursor getValueOfGroupReceiptSet(String dateFrom, String dateBefore) {
-        String[] projection = {
-                "date("+ ReceiptSet.COLUMN_STATESTARTDATE+")",
                 ReceiptSet.COLUMN_UNIT_NAME,
-                "sum("+ ReceiptSet.COLUMN_COUNT+")",
-                "sum("+ ReceiptSet.COLUMN_SLA_EXPIRED_COUNT+")"
+                "sum(" + ReceiptSet.COLUMN_COUNT + ")",
+                "sum(" + ReceiptSet.COLUMN_COUNT_AFTER_TIME + ")"
         };
-        String selection = "date("+ ReceiptSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?";
-        String[] selectionArg = {dateFrom, dateBefore};
+        String tables = ReceiptSet.TABLE_NAME;
         String groupBy = ReceiptSet.COLUMN_UNIT_NAME;
-        return db.query(ReceiptSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-    }
-
-    public Cursor getValueOfDistrictOpenSet(String dateFrom, String dateBefore) {
-        String[] projection = {
-                "date("+ OpenSet.COLUMN_STATESTARTDATE+")",
-                OpenSet.COLUMN_DISTRICT,
-                "sum("+ OpenSet.COLUMN_COUNT+")",
-                "sum("+ OpenSet.COLUMN_SLA_EXPIRED_COUNT+")"
-        };
-        String selection = "date("+ OpenSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?";
-        String[] selectionArg = {dateFrom, dateBefore};
-        String groupBy = OpenSet.COLUMN_DISTRICT;
-        return db.query(OpenSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-    }
-
-    public Cursor getValueOfGroupOpenSet(String dateFrom, String dateBefore) {
-        String[] projection = {
-                "date("+ OpenSet.COLUMN_STATESTARTDATE+")",
-                OpenSet.COLUMN_UNIT_NAME,
-                "sum("+ OpenSet.COLUMN_COUNT+")",
-                "sum("+ OpenSet.COLUMN_SLA_EXPIRED_COUNT+")"
-        };
-        String selection = "date("+ OpenSet.COLUMN_STATESTARTDATE+") >= ? AND date("+ OpenSet.COLUMN_STATESTARTDATE+") <= ?";
-        String[] selectionArg = {dateFrom, dateBefore};
-        String groupBy = OpenSet.COLUMN_UNIT_NAME;
-        return db.query(OpenSet.TABLE_NAME, projection, selection, selectionArg, groupBy, null, null);
-    }
-
-    public int getProcessExecution() {
-        Cursor cursor = db.query(ProcessedSet.TABLE_NAME, new String[] {"sum("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")"}, null, null,null,null,null);
-        int processExecution = 0;
-        if (cursor != null){
-            cursor.moveToFirst();
-            processExecution = cursor.getInt(0);
-        }
-        cursor.close();
-        return processExecution;
-    }
-
-    public int getSLAPercent() {
-        Cursor cursor = db.query(OpenSet.TABLE_NAME, new String[] {"sum("+ OpenSet.COLUMN_SLA_EXPIRED_COUNT+")", "sum("+ OpenSet.COLUMN_COUNT+")"}, null, null, null, null, null);
-        int notSLA = 0;
-        int sla = 0;
-        int percent = 0;
+        Cursor cursor = db.query(tables, projection, null, null, groupBy, null, null);
+        ArrayList<Report> reports = new ArrayList<>();
         if (cursor != null) {
             cursor.moveToFirst();
-            notSLA = cursor.getInt(0);
-            sla = cursor.getInt(1);
-            if (sla != 0){
-                percent = (int) ((sla - notSLA)/(sla/100));
-            }
-        }
-        cursor.close();
-        return percent;
-    }
-
-    //Получить сумму всех значений WAITIME из таблицы ProcessedSet
-    public int getTotalProcessingTime() {
-        Cursor cursor = db.query(ProcessedSet.TABLE_NAME, new String[]{ProcessedSet.COLUMN_WAIT_TIME}, null, null, null, null, null);
-        int waitTime = 0;
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    waitTime += cursor.getInt(0);
-                } while (cursor.moveToNext());
-            }
+            do {
+                String name = cursor.getString(0);
+                int count = cursor.getInt(1);
+                int countAfterTime = cursor.getInt(2);
+                if (name != null ) {
+                    reports.add(new Report(name, count - countAfterTime, count ));
+                }
+            }while (cursor.moveToNext());
             cursor.close();
         }
-        cursor.close();
-        return waitTime;
+        return reports;
     }
-
-    //Получить сумму всех значений WORKTIME из таблицы ProcessedSet
-    public int getTotalWorkTime() {
-        Cursor cursor = db.query(ProcessedSet.TABLE_NAME, new String[]{ProcessedSet.COLUMN_WORK_TIME}, null, null, null, null, null);
-        int workTime = 0;
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    workTime += cursor.getInt(0);
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
-        }
-        cursor.close();
-        return workTime;
-    }
-
-    public Cursor getTimeOfProcessing(){
-        return db.query(ProcessedSet.TABLE_NAME, new String[] {
-                "sum("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")",
-                "avg("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")",
-                "sum("+ ProcessedSet.COLUMN_WORK_TIME+")",
-                "avg("+ ProcessedSet.COLUMN_WORK_TIME+")",
-                "sum("+ ProcessedSet.COLUMN_WAIT_TIME+")",
-                "avg("+ ProcessedSet.COLUMN_WAIT_TIME+")"}, null, null, null, null, null);
-    }
-
-    public Cursor getTimeOfProcessingWithDate(String dateFrom, String dateBefore){
-        return db.query(ProcessedSet.TABLE_NAME, new String[] {
-                "date("+ ProcessedSet.COLUMN_STATESTARTDATE+")",
-                "sum("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")",
-                "avg("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")",
-                "sum("+ ProcessedSet.COLUMN_WORK_TIME+")",
-                "avg("+ ProcessedSet.COLUMN_WORK_TIME+")",
-                "sum("+ ProcessedSet.COLUMN_WAIT_TIME+")",
-                "avg("+ ProcessedSet.COLUMN_WAIT_TIME+")"}, "date("+ ProcessedSet.COLUMN_STATESTARTDATE+")" + " BETWEEN ? AND ?", new String[] {dateFrom, dateBefore}, null, null, null);
-    }
-
-    public Cursor getTypeTime(String dateFrom, String dateBefore) {
-        return db.query(ProcessedSet.TABLE_NAME, new String[] {
-                "date("+ ProcessedSet.COLUMN_STATESTARTDATE+")",
-                ProcessedSet.COLUMN_TYPE_OF_SET,
-                "sum("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")",
-                "sum("+ ProcessedSet.COLUMN_PROCESS_STATE_COUNT+")"
-        }, "date("+ ProcessedSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?", new String[] {dateFrom, dateBefore}, ProcessedSet.COLUMN_TYPE_OF_SET, null, null);
-    }
-
-
-    public Cursor getGroupTime(String dateFrom, String dateBefore) {
-        return db.query(ProcessedSet.TABLE_NAME, new String[] {
-                "date("+ ProcessedSet.COLUMN_STATESTARTDATE+")",
-                ProcessedSet.COLUMN_UNIT_NAME,
-                "sum("+ ProcessedSet.COLUMN_PROCESS_EXECUTION+")",
-                "sum("+ ProcessedSet.COLUMN_PROCESS_STATE_COUNT+")"
-        }, "date("+ ProcessedSet.COLUMN_STATESTARTDATE+") BETWEEN ? AND ?", new String[] {dateFrom, dateBefore}, ProcessedSet.COLUMN_UNIT_NAME, null, null);
-    }
-
 
 }

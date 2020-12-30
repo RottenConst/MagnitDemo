@@ -24,7 +24,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:listitem="@layout/row_spinner" />
+            tools:listitem="@layout/row_spinner_period" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cv_set_filters"

@@ -25,7 +25,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.appeaser.sublimepickerlibrary.datepicker.SelectedDate;
 import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions;
@@ -42,7 +41,6 @@ import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
-import ru.optimum.load.magnitdemo.app.SyncManager;
 import ru.optimum.load.magnitdemo.data.ChartData;
 import ru.optimum.load.magnitdemo.data.Filter;
 import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
@@ -102,6 +100,7 @@ public class MonitoringFragment extends Fragment {
             mRecurrenceRule = recurrenceRule != null ? recurrenceRule : "n/a";
 
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            DateFormat format = new SimpleDateFormat("dd.MM.yyyy");
             startDate = df.format(mSelectDate.getStartDate().getTime());
             endDate = df.format(mSelectDate.getEndDate().getTime());
             chartData.clear();
@@ -109,6 +108,13 @@ public class MonitoringFragment extends Fragment {
             adapterChardCard.setData(chartData);
             adapterChardCard.notifyDataSetChanged();
             Toast.makeText(getContext(), startDate + " " + endDate, Toast.LENGTH_LONG).show();
+            if (filters.size() == 5) {
+                filters.add(5,format.format(mSelectDate.getStartDate().getTime()) + " - " + format.format(mSelectDate.getEndDate().getTime()) );
+            } else {
+                filters.set(5, format.format(mSelectDate.getStartDate().getTime()) + " - " + format.format(mSelectDate.getEndDate().getTime()) );
+            }
+            spinnerPeriod.setSelection(5);
+            adapterPeriod.notifyDataSetChanged();
         }
     };
 
@@ -602,7 +608,7 @@ public class MonitoringFragment extends Fragment {
     }
 
     private void initSpinner() {
-        adapterPeriod = new SpinnerAdapterPeriod(getContext(), R.layout.row_spinner, filters);
+        adapterPeriod = new SpinnerAdapterPeriod(getContext(), R.layout.row_spinner_period, filters);
         spinnerPeriod.setAdapter(adapterPeriod);
     }
 

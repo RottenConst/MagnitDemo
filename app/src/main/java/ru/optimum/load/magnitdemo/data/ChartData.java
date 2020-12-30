@@ -1,13 +1,16 @@
 package ru.optimum.load.magnitdemo.data;
 
+import android.util.Pair;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class ChartData {
     String title;
-    ArrayList<Integer> counts;
+    List<Pair<String,Integer>> counts;
     int count;
 
-    public ChartData(String title, ArrayList<Integer> counts, int count) {
+    public ChartData(String title, List<Pair<String,Integer>> counts, int count) {
         this.title = title;
         this.counts = counts;
         this.count = count;
@@ -27,11 +30,11 @@ public class ChartData {
         this.title = title;
     }
 
-    public ArrayList<Integer> getCounts() {
+    public List<Pair<String,Integer>> getCounts() {
         return counts;
     }
 
-    public void setCounts(ArrayList<Integer> counts) {
+    public void setCounts(List<Pair<String,Integer>> counts) {
         this.counts = counts;
     }
 
