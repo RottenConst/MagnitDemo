@@ -14,7 +14,7 @@
     <string name="open_text">Открыто</string>
     <string name="value_num_monitoring">22700</string>
     <string name="num_preview_sla">83%</string>
-    <string name="sla">sla</string>
+    <string name="sla">SLA</string>
     <string name="dynamics">Динамика</string>
     <string name="by_district">По округу</string>
     <string name="by_group">По группам</string>
@@ -81,5 +81,6 @@
     <string name="report_not_enable">Отчет не выбран</string>
     <string name="null_number">0</string>
     <string name="Date">Ничего не выбранно</string>
+    <string name="title_expired_sla">Истекает SLA, % от обьема</string>
 
 </resources>

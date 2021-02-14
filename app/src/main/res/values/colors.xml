@@ -6,16 +6,19 @@
 
     <color name="redPrimary">#E30119</color>
     <color name="redPrimaryDark">#872630</color>
-    <color name="redAccent">#E301C5</color>
+    <color name="redAccent">#DA66CA</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="white">#ffffff</color>
     <color name="grey">#A69F9F</color>
+    <color name="grey_sla">#676566</color>
     <color name="shadow">#0CFFFFFF</color>
     <color name="black">#000000</color>
     <color name="greenChart">#00897B</color>
 
-    <color name="cardViewOpen">#5E35B1</color>
-    <color name="cardViewReceived">#039BE5</color>
-    <color name="cardViewInWork">#FFB300</color>
-    <color name="cardViewComplete">#4EAE52</color>
+    <color name="cardViewOpen">#8477FF</color>
+    <color name="cardViewReceived">#6ECCFC</color>
+    <color name="cardViewInWork">#FEB84F</color>
+    <color name="cardViewComplete">#0AE299</color>
+    <color name="slaNotExpired">#63B629</color>
+    <color name="slaExpired">#C68EBD</color>
 </resources>

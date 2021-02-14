@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +56,10 @@ public class MonitoringFragment extends Fragment {
     Spinner spinnerPeriod;
     SpinnerAdapterPeriod adapterPeriod;
     CardView cvFilters;
+    ProgressBar slaNotExpired;
+    ProgressBar slaExpired;
+    TextView tvSla;
+    TextView tvSlaExpired;
     RecyclerView cardRecycler;
     RecyclerView rvFilterList;
     TextView tvFilters;
@@ -107,6 +112,7 @@ public class MonitoringFragment extends Fragment {
             enableFilters(startDate, endDate, filterEnabled);
             adapterChardCard.setData(chartData);
             adapterChardCard.notifyDataSetChanged();
+//            setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
             Toast.makeText(getContext(), startDate + " " + endDate, Toast.LENGTH_LONG).show();
             if (filters.size() == 5) {
                 filters.add(5,format.format(mSelectDate.getStartDate().getTime()) + " - " + format.format(mSelectDate.getEndDate().getTime()) );
@@ -138,6 +144,12 @@ public class MonitoringFragment extends Fragment {
         tvFilterPodrasdelenie = view.findViewById(R.id.tv_filter_podrasd);
 
         lBottomFilters = view.findViewById(R.id.bottom_set_filters);
+
+        slaNotExpired = view.findViewById(R.id.pb_sla_not_expired);
+        slaExpired = view.findViewById(R.id.pb_sla_expired);
+        tvSla = view.findViewById(R.id.tv_sla);
+        tvSlaExpired = view.findViewById(R.id.tv_sla_expired);
+
         bottomSheetFilters = BottomSheetBehavior.from(lBottomFilters);
         bottomSheetFilters.setPeekHeight(0);
 
@@ -217,6 +229,7 @@ public class MonitoringFragment extends Fragment {
         enableChartView = true;
         chartData = getDataCountsPeriod(startDate, endDate);
         initChartRecycle(chartData, false);
+        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
 
         spinnerPeriod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -228,6 +241,7 @@ public class MonitoringFragment extends Fragment {
                         enableFilters(startDate, endDate, filterEnabled);
                         adapterChardCard.setData(chartData);
                         adapterChardCard.notifyDataSetChanged();
+                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
                         break;
                     case 1:
                         startDate = "2020-10-06";
@@ -235,14 +249,16 @@ public class MonitoringFragment extends Fragment {
                         enableFilters(startDate, endDate, filterEnabled);
                         adapterChardCard.setData(chartData);
                         adapterChardCard.notifyDataSetChanged();
+                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
                         break;
                     case 2:
-                        Calendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 2, calendar.get(Calendar.DAY_OF_MONTH));
-                        Calendar month = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 3, calendar.get(Calendar.DAY_OF_MONTH));
+                        Calendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 3, calendar.get(Calendar.DAY_OF_MONTH));
+                        Calendar month = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 4, calendar.get(Calendar.DAY_OF_MONTH));
                         Log.d("MONTH", "DATE = " + dateFormat.format(thisMonth.getTime()) + " " + dateFormat.format(month.getTime()));
                         enableFilters(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime()), filterEnabled);
                         adapterChardCard.setData(chartData);
                         adapterChardCard.notifyDataSetChanged();
+                        setSlaProgressBar(getSlaPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())), getSlaExpiredPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())));
                         break;
                     case 3:
                         startDate = dbWrite.getMinDate();
@@ -250,6 +266,7 @@ public class MonitoringFragment extends Fragment {
                         enableFilters(startDate,endDate, filterEnabled);
                         adapterChardCard.setData(chartData);
                         adapterChardCard.notifyDataSetChanged();
+                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
                         break;
                     case 4:
                         SublimePickerFragment pickerFragment = new SublimePickerFragment();
@@ -445,12 +462,15 @@ public class MonitoringFragment extends Fragment {
             if (filtersArgument.length > 2) {
                 filterEnabled = true;
                 chartData = getDataCountsFilter(selectFilter, filtersArgument);
+                setSlaProgressBar(getSlaPercentWithFilter(selectFilter, filtersArgument), getSlaExpiredPercentWithFilter(selectFilter, filtersArgument));
             } else {
                 filterEnabled = false;
                 chartData = getDataCountsPeriod(startDate, endDate);
+                setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
             }
         } else {
             chartData = getDataCountsPeriod(startDate, endDate);
+            setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
         }
     }
 
@@ -594,6 +614,68 @@ public class MonitoringFragment extends Fragment {
                 return enableChartView;
         }
         return true;
+    }
+
+    private int getSlaPercent(String dateFrom, String dateBefore) {
+        float count = dbWrite.getCountOf(ProcessedSet.TABLE_NAME, dateFrom, dateBefore);
+        float sla = dbWrite.getSlaNotExpired(dateFrom, dateBefore);
+        int percent = 0;
+        Log.d("SLA", "count = " + count + "sla = " + sla);
+        if (count != 0) {
+            percent = (int) (sla/(count/100));
+        }
+
+        return percent;
+    }
+
+    private int getSlaExpiredPercent(String dateFrom, String dateBefore) {
+        float count = dbWrite.getCountOf(ProcessedSet.TABLE_NAME, dateFrom, dateBefore);
+        float sla = dbWrite.getSla75Expired(dateFrom, dateBefore);
+        int percent = 0;
+
+        if (count != 0) {
+            percent = (int) (sla/((count)/100));
+        }
+
+        if (percent > 100) {
+            percent = 100;
+        }
+
+        return percent;
+    }
+
+    private int getSlaPercentWithFilter(String selectFilter, String[] filtersArgument) {
+        float count = dbWrite.getCountWithFilter(ProcessedSet.TABLE_NAME, selectFilter, filtersArgument);
+        float sla = dbWrite.getSlaWithFilter(selectFilter, filtersArgument);
+        int percent = 0;
+        if (count != 0) {
+            percent = (int) (sla/(count/100));
+        }
+
+        if (percent > 100) {
+            percent = 100;
+        }
+
+        return percent;
+    }
+
+    private int getSlaExpiredPercentWithFilter(String selectFilter, String[] filtersArgument) {
+        float count = dbWrite.getCountWithFilter(OpenSet.TABLE_NAME, selectFilter, filtersArgument);
+        float sla = dbWrite.getSlaExpiredWithFilter(selectFilter, filtersArgument);
+        int percent = 0;
+        if (count != 0) {
+            percent = (int) (sla/(count/100));
+        }
+
+        return percent;
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void setSlaProgressBar(int valuePercentSla, int valuePercentSlaExpired) {
+        slaNotExpired.setProgress(valuePercentSla);
+        tvSla.setText(valuePercentSla + "%");
+        slaExpired.setProgress(valuePercentSlaExpired);
+        tvSlaExpired.setText(valuePercentSlaExpired + "%");
     }
 
     Pair<Boolean, SublimeOptions> getOptions() {

@@ -65,6 +65,38 @@ public class DatabaseWrapper {
         return count;
     }
 
+    public int getSlaNotExpired(String dateFrom, String dateBefore) {
+        String[] projection = {
+                "sum(" + ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT + ")"
+        };
+        String selection = "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ") BETWEEN ? AND ?";
+        String[] selectionArg = {dateFrom, dateBefore};
+        Cursor cursor = db.query(ProcessedSet.TABLE_NAME, projection, selection, selectionArg, null, null, null);
+        int slaCount = 0;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            slaCount += cursor.getInt(0);
+            cursor.close();
+        }
+        return slaCount;
+    }
+
+    public int getSla75Expired(String dateFrom, String dateBefore) {
+        String[] projection = {
+                "sum(" + ProcessedSet.COLUMN_SLA75_EXPIRED_COUNT + ")"
+        };
+        String selection = "date(" + ProcessedSet.COLUMN_STATESTARTDATE + ") BETWEEN ? AND ?";
+        String[] selectionArg = {dateFrom, dateBefore};
+        Cursor cursor = db.query(OpenSet.TABLE_NAME, projection, selection, selectionArg, null, null, null);
+        int slaCount = 0;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            slaCount += cursor.getInt(0);
+            cursor.close();
+        }
+        return slaCount;
+    }
+
     public List<Pair<String, Integer>> getCountsOf(String tablename, String dateFrom, String dateBefore) {
         String[] projection = {
                 "date(" + OpenSet.COLUMN_STATESTARTDATE + ")",
@@ -281,6 +313,38 @@ public class DatabaseWrapper {
             cursor.close();
         }
         return districts;
+    }
+
+    public int getSlaWithFilter(String filter, String[] filterArg) {
+        String[] projections = {
+                "sum(" + ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT + ")"
+        };
+        String selection = filter;
+        String[] selectArg = filterArg;
+        Cursor cursor = db.query(ProcessedSet.TABLE_NAME, projections, selection, selectArg, null, null, null);
+        int slaCount = 0;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            slaCount += cursor.getInt(0);
+            cursor.close();
+        }
+        return slaCount;
+    }
+
+    public int getSlaExpiredWithFilter(String filter, String[] filterArg) {
+        String[] projections = {
+                "sum(" + ProcessedSet.COLUMN_SLA75_EXPIRED_COUNT + ")"
+        };
+        String selection = filter;
+        String[] selectArg = filterArg;
+        Cursor cursor = db.query(OpenSet.TABLE_NAME, projections, selection, selectArg, null, null, null);
+        int slaCount = 0;
+        if (cursor != null) {
+            cursor.moveToFirst();
+            slaCount += cursor.getInt(0);
+            cursor.close();
+        }
+        return slaCount;
     }
 
     public List<Pair<String,Integer>> getCountsWithFilter(String tableName, String filter, String[] filterArg) {
