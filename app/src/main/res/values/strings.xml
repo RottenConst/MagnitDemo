@@ -80,7 +80,7 @@
                                     Выбирите отчет</string>
     <string name="report_not_enable">Отчет не выбран</string>
     <string name="null_number">0</string>
-    <string name="Date">Ничего не выбранно</string>
+    <string name="Date">Выберите точку на графике</string>
     <string name="title_expired_sla">Истекает SLA, % от обьема</string>
 
 </resources>

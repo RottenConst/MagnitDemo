@@ -41,10 +41,10 @@ public class AdapterReport extends RecyclerView.Adapter<AdapterReport.ReportHold
 
     @Override
     public void onBindViewHolder(@NonNull ReportHolder holder, int position) {
-        if (thsReport == 1) {
+        if (thsReport == 0) {
             sortReportOperator(reports);
             holder.onBindReportOperator(reports.get(position));
-        } else if (thsReport == 2) {
+        } else if (thsReport == 1) {
             sortReportGroup(reports);
             holder.onBindReportGroup(reports.get(position));
         }

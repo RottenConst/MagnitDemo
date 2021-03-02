@@ -49,10 +49,13 @@ public class ReportsFragment extends Fragment {
         rvReports = view.findViewById(R.id.rv_reports);
         dbWrapper = DemoApp.dbWrapper();
 
-        dataReports = dbWrapper.getReportTopOperator();
+        imageViewLogo.setVisibility(View.GONE);
+        tvInfoText.setVisibility(View.GONE);
+
+
         initRecyclerReport(this.getContext(), dataReports);
 
-        reports.add("Отчет не выбран");
+//        reports.add("Отчет не выбран");
         reports.add("Обработка сотрудников от плана");
         reports.add("Динамика обработки по группам (ТОП - 10)");
 
@@ -64,22 +67,17 @@ public class ReportsFragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0:
-                        rvReports.setVisibility(View.GONE);
-                        imageViewLogo.setVisibility(View.VISIBLE);
-                        tvInfoText.setVisibility(View.VISIBLE);
-                        break;
-                    case 1:
                         rvReports.setVisibility(View.VISIBLE);
-                        imageViewLogo.setVisibility(View.GONE);
-                        tvInfoText.setVisibility(View.GONE);
+//                        imageViewLogo.setVisibility(View.GONE);
+//                        tvInfoText.setVisibility(View.GONE);
                         dataReports = dbWrapper.getReportTopOperator();
                         adapterReport.setReports(dataReports, position);
                         adapterReport.notifyDataSetChanged();
                         break;
-                    case 2:
+                    case 1:
                         rvReports.setVisibility(View.VISIBLE);
-                        imageViewLogo.setVisibility(View.GONE);
-                        tvInfoText.setVisibility(View.GONE);
+//                        imageViewLogo.setVisibility(View.GONE);
+//                        tvInfoText.setVisibility(View.GONE);
                         dataReports = sortGroup();
                         adapterReport.setReports(dataReports, position);
                         adapterReport.notifyDataSetChanged();

@@ -244,21 +244,25 @@ public class MonitoringFragment extends Fragment {
                         setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
                         break;
                     case 1:
-                        startDate = "2020-10-06";
-                        endDate = "2020-10-13";
+                        startDate = "2020-09-06";
+                        endDate = "2020-09-13";
                         enableFilters(startDate, endDate, filterEnabled);
                         adapterChardCard.setData(chartData);
                         adapterChardCard.notifyDataSetChanged();
                         setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
                         break;
                     case 2:
-                        Calendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 3, calendar.get(Calendar.DAY_OF_MONTH));
-                        Calendar month = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 4, calendar.get(Calendar.DAY_OF_MONTH));
-                        Log.d("MONTH", "DATE = " + dateFormat.format(thisMonth.getTime()) + " " + dateFormat.format(month.getTime()));
-                        enableFilters(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime()), filterEnabled);
+//                        Calendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 4, calendar.get(Calendar.DAY_OF_MONTH));
+//                        Calendar month = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 5, calendar.get(Calendar.DAY_OF_MONTH));
+                        startDate = "2020-09-01";
+                        endDate = "2020-09-31";
+//                        Log.d("MONTH", "DATE = " + dateFormat.format(thisMonth.getTime()) + " " + dateFormat.format(month.getTime()));
+//                        enableFilters(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime()), filterEnabled);
+                        enableFilters(startDate, endDate, filterEnabled);
                         adapterChardCard.setData(chartData);
                         adapterChardCard.notifyDataSetChanged();
-                        setSlaProgressBar(getSlaPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())), getSlaExpiredPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())));
+//                        setSlaProgressBar(getSlaPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())), getSlaExpiredPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())));
+                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
                         break;
                     case 3:
                         startDate = dbWrite.getMinDate();

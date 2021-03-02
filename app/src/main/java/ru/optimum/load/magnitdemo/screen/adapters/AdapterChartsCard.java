@@ -23,13 +23,11 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.Utils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -220,21 +218,33 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
             yAxis.setLabelCount(4, true);
             yAxis.setDrawLabels(false);
             yAxis.setDrawAxisLine(false);
-
             setDataChart(chartData);
         }
 
         private void setDataChart(ChartData chartData) {
             ArrayList<Entry> values = new ArrayList<>();
-            List<Pair<String, Integer>> counts = chartData.getCounts();
-            for (int i = 0; i < chartData.getCounts().size(); i++) {
-                String[] date = counts.get(i).first.split("-");
-                int year = Integer.parseInt(date[0]);
-                int month = Integer.parseInt(date[1]);
-                int day = Integer.parseInt(date[2]);
-                Calendar mDate = new GregorianCalendar(year, month - 1, day);
-                values.add(new Entry(i, counts.get(i).second, mDate.getTime()));
+            if (chartData.getCounts().size() > 100) {
+                List<Pair<String, Integer>> counts = chartData.getCounts();
+                for (int i = 0; i < chartData.getCounts().size(); i += 10) {
+                    String[] date = counts.get(i).first.split("-");
+                    int year = Integer.parseInt(date[0]);
+                    int month = Integer.parseInt(date[1]);
+                    int day = Integer.parseInt(date[2]);
+                    Calendar mDate = new GregorianCalendar(year, month - 1, day);
+                    values.add(new Entry(i, counts.get(i).second, mDate.getTime()));
+                }
+            } else {
+                List<Pair<String, Integer>> counts = chartData.getCounts();
+                for (int i = 0; i < chartData.getCounts().size(); i++) {
+                    String[] date = counts.get(i).first.split("-");
+                    int year = Integer.parseInt(date[0]);
+                    int month = Integer.parseInt(date[1]);
+                    int day = Integer.parseInt(date[2]);
+                    Calendar mDate = new GregorianCalendar(year, month - 1, day);
+                    values.add(new Entry(i, counts.get(i).second, mDate.getTime()));
+                }
             }
+
 
             LineDataSet lineData;
             if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
@@ -242,7 +252,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                 lineData.setValues(values);
                 lineData.notifyDataSetChanged();
                 chart.getData().notifyDataChanged();
-            } else  {
+            } else {
                 lineData = new LineDataSet(values, "");
                 lineData.setColor(Color.RED);
                 lineData.setCircleColor(Color.RED);
@@ -268,7 +278,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
 
         @Override
         public void onNothingSelected() {
-            tvDateOfCount.setText("Ничего не выбрано");
+            tvDateOfCount.setText("Выберите точку на графике");
         }
     }
 }
