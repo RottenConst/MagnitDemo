@@ -1,10 +1,13 @@
 package ru.optimum.load.magnitdemo.screen.main;
 
+import android.icu.text.Replaceable;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ReportFragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -12,6 +15,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
 import ru.optimum.load.magnitdemo.app.SyncManager;
+import ru.optimum.load.magnitdemo.data.Report;
 import ru.optimum.load.magnitdemo.screen.main.details.fragments.MonitoringFragment;
 import ru.optimum.load.magnitdemo.screen.main.details.fragments.ReportsFragment;
 
@@ -32,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
         DemoApp.syncManager().setSyncStatusListener(this);// регистрируем слушатель синхранизации
 
         navigationView = findViewById(R.id.navigation_details);
+//        navigationView.getMenu().getItem(0).setChecked(true);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
 
         navigationView.setOnNavigationItemSelectedListener(item -> {
             switch (item.getItemId()) {

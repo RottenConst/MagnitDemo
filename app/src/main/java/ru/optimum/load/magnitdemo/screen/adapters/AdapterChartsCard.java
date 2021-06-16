@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -33,13 +34,28 @@ import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.data.ChartData;
+import ru.optimum.load.magnitdemo.screen.main.MainActivity;
+import ru.optimum.load.magnitdemo.screen.main.details.fragments.DetailsMonitorFragment;
 
 public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.ChartsHolder> {
+
+    public interface OnItemClickListener {
+        void onItemClick(ChartData chartData);
+    }
 
     Context context;
     LayoutInflater inflater;
     List<ChartData> chartData;
     public boolean enableChartLayout;
+    public OnItemClickListener listener;
+
+    public AdapterChartsCard(Context context, List<ChartData> chartData, boolean enableChartLayout, OnItemClickListener listener) {
+        this.context = context;
+        this.inflater = LayoutInflater.from(context);
+        this.chartData = chartData;
+        this.enableChartLayout = enableChartLayout;
+        this.listener = listener;
+    }
 
     public AdapterChartsCard(Context context, List<ChartData> chartData, boolean enableChartLayout) {
         this.context = context;
@@ -68,7 +84,7 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
         if (enableChartLayout) {
             holder.onBindCharts(context, chartData.get(position), position);
         } else {
-            holder.onBindViewCard(context, position, chartData.get(position));
+            holder.onBindViewCard(context, position, chartData.get(position), listener);
         }
     }
 
@@ -105,10 +121,11 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                 titleCard = itemView.findViewById(R.id.tv_name_data);
                 tvCountCard = itemView.findViewById(R.id.tv_count_of_data);
                 ivArrow = itemView.findViewById(R.id.image_arrow);
+                chart = itemView.findViewById(R.id.chart_monitoring);
             }
         }
 
-        private void onBindViewCard(Context context, int position, ChartData data) {
+        private void onBindViewCard(Context context, int position, ChartData data, OnItemClickListener listener) {
             titleCard.setTextColor(context.getResources().getColor(R.color.white));
             tvCountCard.setTextColor(context.getResources().getColor(R.color.white));
             int lastIndex = data.getCounts().size() - 1;
@@ -124,6 +141,12 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     } else {
                         ivArrow.setImageResource(R.drawable.ic_arrow_green_up);
                     }
+                    itemView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            listener.onItemClick(data);
+                        }
+                    });
                     break;
                 case 1:
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewReceived));
@@ -135,6 +158,9 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     } else if (data.getCounts().get(0).equals(data.getCounts().get(lastIndex))) {
                         ivArrow.setImageResource(R.color.white);
                     }
+                    itemView.setOnClickListener(v -> {
+                        listener.onItemClick(data);
+                    });
                     break;
                 case 2:
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewInWork));
@@ -147,6 +173,9 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     } else {
                         ivArrow.setImageResource(R.drawable.ic_arrow_green_up);
                     }
+                    itemView.setOnClickListener(v -> {
+                        listener.onItemClick(data);
+                    });
                     break;
                 case 3:
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewComplete));
@@ -160,6 +189,9 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
                     } else {
                         ivArrow.setImageResource(R.drawable.ic_arrow_green_up);
                     }
+                    itemView.setOnClickListener(v -> {
+                        listener.onItemClick(data);
+                    });
                     break;
             }
 
@@ -177,17 +209,17 @@ public class AdapterChartsCard extends RecyclerView.Adapter<AdapterChartsCard.Ch
             } else {
                 ivArrow.setImageResource(R.drawable.ic_arrow_green_up);
             }
-            switch (position) {
-                case 0:
+            switch (chartData.getTitle()) {
+                case "Открыто":
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewOpen));
                     break;
-                case 1:
+                case "Поступило":
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewReceived));
                     break;
-                case 2:
+                case "В работе":
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewInWork));
                     break;
-                case 3:
+                case "Обработано":
                     cardView.setCardBackgroundColor(context.getResources().getColor(R.color.cardViewComplete));
                     break;
             }

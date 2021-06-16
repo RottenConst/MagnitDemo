@@ -2,6 +2,7 @@ package ru.optimum.load.magnitdemo.screen.main.details.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,10 +11,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,6 +25,7 @@ import java.util.List;
 
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
+import ru.optimum.load.magnitdemo.data.ChartData;
 import ru.optimum.load.magnitdemo.data.Report;
 import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
 import ru.optimum.load.magnitdemo.screen.adapters.AdapterReport;
@@ -39,6 +43,14 @@ public class ReportsFragment extends Fragment {
     List<String> reports = new ArrayList<>();
     List<Report> dataReports = new ArrayList<>();
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        //        reports.add("Отчет не выбран");
+        reports.add("Динамика обработки по секторам");
+        reports.add("Обработка сотрудников от плана");
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -51,16 +63,12 @@ public class ReportsFragment extends Fragment {
 
         imageViewLogo.setVisibility(View.GONE);
         tvInfoText.setVisibility(View.GONE);
-
+        rvReports.setVisibility(View.VISIBLE);
 
         initRecyclerReport(this.getContext(), dataReports);
-
-//        reports.add("Отчет не выбран");
-        reports.add("Обработка сотрудников от плана");
-        reports.add("Динамика обработки по группам (ТОП - 10)");
-
         adapterSpinner = new SpinnerAdapterReport(getContext(), R.layout.row_spinner_report, reports);
         spinnerReport.setAdapter(adapterSpinner);
+
 
         spinnerReport.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -70,15 +78,15 @@ public class ReportsFragment extends Fragment {
                         rvReports.setVisibility(View.VISIBLE);
 //                        imageViewLogo.setVisibility(View.GONE);
 //                        tvInfoText.setVisibility(View.GONE);
-                        dataReports = dbWrapper.getReportTopOperator();
+                        dataReports = sortGroup();
                         adapterReport.setReports(dataReports, position);
                         adapterReport.notifyDataSetChanged();
                         break;
                     case 1:
                         rvReports.setVisibility(View.VISIBLE);
-//                        imageViewLogo.setVisibility(View.GONE);
-//                        tvInfoText.setVisibility(View.GONE);
-                        dataReports = sortGroup();
+//                          imageViewLogo.setVisibility(View.GONE);
+//                          tvInfoText.setVisibility(View.GONE);
+                        dataReports = dbWrapper.getReportTopOperator();
                         adapterReport.setReports(dataReports, position);
                         adapterReport.notifyDataSetChanged();
                         break;
@@ -119,7 +127,12 @@ public class ReportsFragment extends Fragment {
     private void initRecyclerReport(Context context, List<Report> reports) {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
         linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
-        adapterReport = new AdapterReport(context, reports, 1);
+        adapterReport = new AdapterReport(context, reports, 0, report -> {
+            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+            ReportOnSectorFragment reportOnSectorFragment = ReportOnSectorFragment.newInstance(report.getName());
+            ft.addToBackStack("operator");
+            ft.replace(R.id.tab_container, reportOnSectorFragment).commit();
+        });
         rvReports.setLayoutManager(linearLayoutManager);
         rvReports.setAdapter(adapterReport);
     }

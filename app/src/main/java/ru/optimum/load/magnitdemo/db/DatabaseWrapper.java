@@ -25,11 +25,11 @@ public class DatabaseWrapper {
 
     public String getMaxDate() {
         String[] projection = {
-                "max(date("+ReceiptSet.COLUMN_STATESTARTDATE+"))"};
+                "date("+OpenSet.COLUMN_STATESTARTDATE+")"};
         Cursor cursor = db.query(OpenSet.TABLE_NAME, projection, null,null,null, null, null);
         String date = "";
         if (cursor != null) {
-            cursor.moveToFirst();
+            cursor.moveToLast();
             date = cursor.getString(0);
             cursor.close();
         }
@@ -38,7 +38,7 @@ public class DatabaseWrapper {
 
     public String getMinDate() {
         String[] projection = {
-                "min(date("+ReceiptSet.COLUMN_STATESTARTDATE+"))"};
+                "date("+ReceiptSet.COLUMN_STATESTARTDATE+")"};
         Cursor cursor = db.query(OpenSet.TABLE_NAME, projection, null,null,null, null, null);
         String date = "";
         if (cursor != null) {
@@ -463,9 +463,9 @@ public class DatabaseWrapper {
         String[] projection = {
                 ProcessedSet.COLUMN_PROCESSING_OPERATOR,
                 "sum(" + ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT + ")",
-                "sum(" + ReceiptSet.COLUMN_SLA_EXPIRED_COUNT + ")"
+                "sum(" + ProcessedSet.COLUMN_COUNT + ")",
         };
-        String tables = ProcessedSet.TABLE_NAME + ", " + ReceiptSet.TABLE_NAME;
+        String tables = ProcessedSet.TABLE_NAME;
         String groupBy = ProcessedSet.COLUMN_PROCESSING_OPERATOR;
         Cursor cursor = db.query(tables, projection, null, null, groupBy, null, null);
         ArrayList<Report> reports = new ArrayList<>();
@@ -502,6 +502,33 @@ public class DatabaseWrapper {
                 int countAfterTime = cursor.getInt(2);
                 if (name != null ) {
                     reports.add(new Report(name, count - countAfterTime, count ));
+                }
+            }while (cursor.moveToNext());
+            cursor.close();
+        }
+        return reports;
+    }
+
+    public ArrayList<Report> getReportOperatorToUnitName(String unitName) {
+        String[] projection = {
+                ProcessedSet.COLUMN_PROCESSING_OPERATOR,
+                "sum(" + ProcessedSet.COLUMN_SLA_NOT_EXPIRED_COUNT + ")",
+                "sum(" + ProcessedSet.COLUMN_COUNT + ")"
+        };
+        String table = ProcessedSet.TABLE_NAME;
+        String groupBy = ProcessedSet.COLUMN_PROCESSING_OPERATOR;
+        String selection = ProcessedSet.COLUMN_UNIT_NAME + "= ?";
+        String[] selectionArg = {unitName};
+        Cursor cursor = db.query(table, projection, selection, selectionArg, groupBy, null, null);
+        ArrayList<Report> reports = new ArrayList<>();
+        if (cursor != null) {
+            cursor.moveToFirst();
+            do {
+                String name = cursor.getString(0);
+                int sla = cursor.getInt(1);
+                int slaExpiredCount = cursor.getInt(2);
+                if (!name.equals(" ") || !name.contains("N/A")) {
+                    reports.add(new Report(name, sla, sla + slaExpiredCount));
                 }
             }while (cursor.moveToNext());
             cursor.close();

@@ -67,7 +67,7 @@ public class LoginActivity extends AppCompatActivity implements ILoginStatusList
         DemoApp.loginManager().setLoginStatusListener(this);
 
         loginIn.setOnClickListener(v -> {
-            DemoApp.loginManager().login("\\login", ""); //при клике прверяем логин и пароль на платформе Optimum
+            DemoApp.loginManager().login("login", ""); //при клике прверяем логин и пароль на платформе Optimum
             enter = false;
         });
     }

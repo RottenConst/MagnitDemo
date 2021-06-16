@@ -32,12 +32,19 @@ public class AdapterFilter extends RecyclerView.Adapter<AdapterFilter.FilterHold
         this.context = context;
         this.filters = filters;
         filtersArgs = new ArrayList<>();
+        filtersArgs.add(new String[0]);
+        filtersArgs.add(new String[0]);
+        filtersArgs.add(new String[0]);
+        filtersArgs.add(new String[0]);
+        filtersArgs.add(new String[0]);
+        filtersArgs.add(new String[0]);
     }
 
     @NonNull
     @Override
     public FilterHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.item_filter, parent, false);
+
         return new FilterHolder(view);
     }
 
@@ -53,6 +60,11 @@ public class AdapterFilter extends RecyclerView.Adapter<AdapterFilter.FilterHold
 
     public List<String[]> getFilterArg() {
         return filtersArgs;
+    }
+
+    public void setFilters(List<String[]> filtersArgs) {
+        AdapterFilter.filtersArgs.clear();
+        AdapterFilter.filtersArgs = filtersArgs;
     }
 
     static class FilterHolder extends RecyclerView.ViewHolder {
@@ -73,13 +85,8 @@ public class AdapterFilter extends RecyclerView.Adapter<AdapterFilter.FilterHold
             String[] titles = filters.getTitle();
             boolean[] isCheck = filters.getCheck();
             filter.setText(category);
-            filtersArgs.clear();
-            filtersArgs.add(new String[0]);
-            filtersArgs.add(new String[0]);
-            filtersArgs.add(new String[0]);
-            filtersArgs.add(new String[0]);
-            filtersArgs.add(new String[0]);
-            filtersArgs.add(new String[0]);
+
+
             count_filters.setText("Все");
             count_filters.setOnClickListener(v -> {
                 getAlertDialog(v.getContext(), category, titles, isCheck);

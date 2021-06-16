@@ -1,6 +1,8 @@
 package ru.optimum.load.magnitdemo.screen.main.details.fragments;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
@@ -12,19 +14,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,6 +33,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.appeaser.sublimepickerlibrary.datepicker.SelectedDate;
 import com.appeaser.sublimepickerlibrary.helpers.SublimeOptions;
 import com.appeaser.sublimepickerlibrary.recurrencepicker.SublimeRecurrencePicker;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.MarkerView;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.text.DateFormat;
@@ -42,6 +52,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import ru.optimum.load.magnitdemo.DBContact;
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
 import ru.optimum.load.magnitdemo.data.ChartData;
@@ -52,34 +63,31 @@ import ru.optimum.load.magnitdemo.screen.adapters.AdapterFilter;
 import ru.optimum.load.magnitdemo.screen.adapters.SpinnerAdapterPeriod;
 import ru.optimum.load.magnitdemo.utils.SharedPreferensStorage;
 
-import static ru.optimum.load.magnitdemo.DBContact.*;
-
-public class MonitoringFragment extends Fragment {
+public class DetailsMonitorFragment extends Fragment implements OnChartValueSelectedListener {
 
     Spinner spinnerPeriod;
     SpinnerAdapterPeriod adapterPeriod;
     CardView cvFilters;
 
-    ProgressBar slaNotExpired;
-    ProgressBar slaExpired;
-    TextView tvSla;
-    TextView tvSlaExpired;
-    CardView cardSlaExpired;
-    CardView cardSlaNotExpired;
+    String title;
+    LineChart chart;
+    TextView tvTitleChart;
+    TextView tvCountChart;
+    ImageView ivArrow;
+    TextView tvDateOfCount;
+    CardView cvChart;
 
-    RecyclerView cardRecycler;
     RecyclerView rvFilterList;
     TextView tvFilters;
     Button btnEnableFilter;
     ConstraintLayout lBottomFilters;
     BottomSheetBehavior bottomSheetFilters;
-    AdapterChartsCard adapterChardCard;
-    Boolean enableChartView;
-    List<ChartData> chartData;
+
+    List<ChartData> chartData = new ArrayList<>();
     Calendar calendar;
     private DatabaseWrapper dbWrite;
     List<String> filters;
-    List<String[]> filterArg;
+    List<String[]> filterArg = new ArrayList<>();
     String startDate;
     String endDate;
 
@@ -93,10 +101,9 @@ public class MonitoringFragment extends Fragment {
     TextView tvFilterGroupProcessed;
     TextView tvFilterDistrict;
     TextView tvFilterPodrasdelenie;
+    List<Filter> filtersTag = new ArrayList<>();
 
-    List<Filter> filtersTag;
-
-    Boolean filterEnabled = false;
+    Boolean filterEnabled;
 
     SelectedDate mSelectDate;
     String mRecurrenceOption, mRecurrenceRule;
@@ -119,8 +126,8 @@ public class MonitoringFragment extends Fragment {
             endDate = df.format(mSelectDate.getEndDate().getTime());
             chartData.clear();
             enableFilters(startDate, endDate, filterEnabled);
-            adapterChardCard.setData(chartData);
-            adapterChardCard.notifyDataSetChanged();
+            initChart(chartData.get(0));
+
 //            setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
             Toast.makeText(getContext(), startDate + " " + endDate, Toast.LENGTH_LONG).show();
             if (filters.size() == 5) {
@@ -136,36 +143,39 @@ public class MonitoringFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.main_monitorig_layout, container, false);
-        spinnerPeriod = view.findViewById(R.id.spnr_period_main);
-        cvFilters = view.findViewById(R.id.cv_set_filters);
-        cardRecycler = view.findViewById(R.id.rv_monitoring);
-        tvFilters = view.findViewById(R.id.tv_filters);
+        View view = inflater.inflate(R.layout.chart_fragment, container, false);
+        spinnerPeriod = view.findViewById(R.id.spinner_period_main);
+        cvFilters = view.findViewById(R.id.card_set_filters);
+
+        tvFilters = view.findViewById(R.id.text_filters);
         rvFilterList = view.findViewById(R.id.rv_filter_list);
 
+        chart = view.findViewById(R.id.chart_monitoring_detail);
+        tvCountChart = view.findViewById(R.id.text_count_card);
+        ivArrow = view.findViewById(R.id.image_arrow);
+        tvDateOfCount = view.findViewById(R.id.text_date_of_number);
+        tvTitleChart = view.findViewById(R.id.text_title_card);
+        cvChart = view.findViewById(R.id.card_of_detail);
+
         btnEnableFilter = view.findViewById(R.id.btn_set_filters);
-        clearFilters = view.findViewById(R.id.tv_clear_filter);
-        tvFilterCompany = view.findViewById(R.id.tv_filter_company);
-        tvFilterFiliate = view.findViewById(R.id.tv_filter_filiate);
-        tvFilterTypeComplect = view.findViewById(R.id.tv_filter_type_complect);
-        tvFilterGroupProcessed = view.findViewById(R.id.tv_filter_group_process);
-        tvFilterDistrict = view.findViewById(R.id.tv_filter_district);
-        tvFilterPodrasdelenie = view.findViewById(R.id.tv_filter_podrasd);
+        clearFilters = view.findViewById(R.id.text_clear_filter);
+        tvFilterCompany = view.findViewById(R.id.text_filter_company);
+        tvFilterFiliate = view.findViewById(R.id.text_filter_filiate);
+        tvFilterTypeComplect = view.findViewById(R.id.text_filter_type_complect);
+        tvFilterGroupProcessed = view.findViewById(R.id.text_filter_group_process);
+        tvFilterDistrict = view.findViewById(R.id.text_filter_district);
+        tvFilterPodrasdelenie = view.findViewById(R.id.text_filter_podrasd);
 
         lBottomFilters = view.findViewById(R.id.bottom_set_filters);
 
-        slaNotExpired = view.findViewById(R.id.pb_sla_not_expired);
-        slaExpired = view.findViewById(R.id.pb_sla_expired);
-        tvSla = view.findViewById(R.id.tv_sla);
-        tvSlaExpired = view.findViewById(R.id.tv_sla_expired);
-        cardSlaExpired = view.findViewById(R.id.cv_sla_expired);
-        cardSlaNotExpired = view.findViewById(R.id.cv_sla_no_expired);
 
         bottomSheetFilters = BottomSheetBehavior.from(lBottomFilters);
         bottomSheetFilters.setPeekHeight(0);
 
-        dbWrite = DemoApp.dbWrapper();
-        filtersTag = getFilters();
+
+//        if (filtersTag.size() == 0) {
+//            filtersTag = getFilters();
+//        }
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
@@ -174,11 +184,9 @@ public class MonitoringFragment extends Fragment {
         adapterFilter = new AdapterFilter(getContext(), filtersTag);
         rvFilterList.setAdapter(adapterFilter);
 
-        filterArg = adapterFilter.getFilterArg();
+        checkFilter(filterArg);
+        adapterFilter.setFilters(filterArg);
 
-
-        startDate = "2020-10-12";
-        endDate = "2020-10-13";
 
         clearFilters.setOnClickListener(v -> {
             if (filterArg != null) {
@@ -187,8 +195,7 @@ public class MonitoringFragment extends Fragment {
             }
             clearFilters(filtersTag);
             enableFilters(startDate, endDate, false);
-            adapterChardCard.setData(chartData);
-            adapterChardCard.notifyDataSetChanged();
+            initChart(chartData.get(0));
         });
 
         cvFilters.setOnClickListener(v -> {
@@ -206,11 +213,8 @@ public class MonitoringFragment extends Fragment {
             if (!filterEnabled) {
                 filterEnabled = true;
             }
-
-            filtersTag = getFilters();
             enableFilters(startDate, endDate, filterEnabled);
-            adapterChardCard.setData(chartData);
-            adapterChardCard.notifyDataSetChanged();
+            initChart(chartData.get(0));
             checkFilter(filterArg);
             bottomSheetFilters.setState(BottomSheetBehavior.STATE_COLLAPSED);
             bottomSheetFilters.setPeekHeight(0);
@@ -234,18 +238,17 @@ public class MonitoringFragment extends Fragment {
             }
         });
 
-        String totalPeriod = dbWrite.getMinDate() + " - " + dbWrite.getMaxDate();
+        filters = new ArrayList<>();
+        filters.add(startDate + " - " + endDate);
+        filters.add("За день");
+        filters.add("За неделю");
+        filters.add("За месяц");
+        filters.add("За все время");
+        filters.add("Задать период");
 
-        filters = new ArrayList<>(Arrays.asList("За день", "За неделю", "За месяц", "За все время (" + totalPeriod + ")", "Задать период"));
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         calendar = Calendar.getInstance();
 
         initSpinner();
-        enableChartView = true;
-        checkFilter(filterArg);
-        chartData = getDataCountsPeriod(startDate, endDate);
-        initChartRecycle(chartData, false);
-        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
 
 
         spinnerPeriod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -253,43 +256,49 @@ public class MonitoringFragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0:
+                        if (filterEnabled) {
+                            Log.d("FILTER", "onItemSelected: 1");
+                            enableFilters(startDate, endDate, true);
+                            initChart(chartData.get(0));
+                            checkFilter(filterArg);
+                            adapterFilter.notifyDataSetChanged();
+                        } else {
+                            enableFilters(startDate, endDate, false);
+                            initChart(chartData.get(0));
+                        }
+                        break;
+                    case 1:
                         startDate = "2020-10-12";
                         endDate = "2020-10-13";
                         enableFilters(startDate, endDate, filterEnabled);
-                        adapterChardCard.setData(chartData);
-                        adapterChardCard.notifyDataSetChanged();
-                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
+                        initChart(chartData.get(0));
+
                         break;
-                    case 1:
+                    case 2:
                         startDate = "2020-09-06";
                         endDate = "2020-09-13";
                         enableFilters(startDate, endDate, filterEnabled);
-                        adapterChardCard.setData(chartData);
-                        adapterChardCard.notifyDataSetChanged();
-                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
-                        break;
-                    case 2:
-//                        Calendar thisMonth = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 4, calendar.get(Calendar.DAY_OF_MONTH));
-//                        Calendar month = new GregorianCalendar(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) - 5, calendar.get(Calendar.DAY_OF_MONTH));
-                        startDate = "2020-09-01";
-                        endDate = "2020-09-31";
-//                        Log.d("MONTH", "DATE = " + dateFormat.format(thisMonth.getTime()) + " " + dateFormat.format(month.getTime()));
-//                        enableFilters(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime()), filterEnabled);
-                        enableFilters(startDate, endDate, filterEnabled);
-                        adapterChardCard.setData(chartData);
-                        adapterChardCard.notifyDataSetChanged();
-//                        setSlaProgressBar(getSlaPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())), getSlaExpiredPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())));
-                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
+                        initChart(chartData.get(0));
+
                         break;
                     case 3:
+
+                        startDate = "2020-09-01";
+                        endDate = "2020-09-31";
+
+                        enableFilters(startDate, endDate, filterEnabled);
+                        initChart(chartData.get(0));
+//                        setSlaProgressBar(getSlaPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())), getSlaExpiredPercent(dateFormat.format(month.getTime()), dateFormat.format(thisMonth.getTime())));
+
+                        break;
+                    case 4:
                         startDate = dbWrite.getMinDate();
                         endDate = "2020-10-13";
                         enableFilters(startDate,endDate, filterEnabled);
-                        adapterChardCard.setData(chartData);
-                        adapterChardCard.notifyDataSetChanged();
-                        setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
+                        initChart(chartData.get(0));
+
                         break;
-                    case 4:
+                    case 5:
                         SublimePickerFragment pickerFragment = new SublimePickerFragment();
                         pickerFragment.setCallback(mSublimePickerCallback);
                         Pair<Boolean, SublimeOptions> optionsPair = getOptions();
@@ -307,7 +316,8 @@ public class MonitoringFragment extends Fragment {
 
             }
         });
-
+//        enableFilters(iStartData, iEndData, filterEnabled);
+//        initChart(chartData.get(0));
         return view;
     }
 
@@ -315,16 +325,35 @@ public class MonitoringFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferensStorage.init(getContext());
-        SharedPreferensStorage.clearAll();
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (chartData.size() > 0){
-
+        startDate = getArguments().getString("startDate");
+        endDate = getArguments().getString("endDate");
+        title = getArguments().getString("title");
+        filterEnabled = getArguments().getBoolean("filterEnabled");
+        int size = getArguments().getInt("size");
+        int sizeA = getArguments().getInt("sizeA");
+        for (int i = 0; i < sizeA; i++) {
+            String[] filt = SharedPreferensStorage.getListString("fa" + i);
+            filterArg.add(filt);
         }
+
+        for (int i = 0; i < size; i++) {
+            Filter filter = SharedPreferensStorage.getFilter("filter" + i);
+            filtersTag.add(filter);
+        }
+
+        SharedPreferensStorage.clearAll();
+        dbWrite = DemoApp.dbWrapper();
+
+
+//        String[] countStr = getArguments().getStringArray("countString");
+//        int[] countInt = getArguments().getIntArray("countInt");
+//        int count = getArguments().getInt("count");
+//        List<Pair<String,Integer>> counts = new ArrayList<>();
+//        for (int i = 0; i < countInt.length; i++) {
+//            counts.add(new Pair<>(countStr[i], countInt[i]));
+//        }
+//        chartData.add(new ChartData(title, counts, count));
+        setHasOptionsMenu(true);
     }
 
     private List<Filter> getFilters() {
@@ -351,44 +380,44 @@ public class MonitoringFragment extends Fragment {
     private void checkFilter(List<String[]> filterArg) {
         if (filterArg != null && !filterArg.isEmpty()) {
             for (int i = 0; i < filterArg.size(); i++) {
-                    switch (i) {
-                        case 0:
-                            if (filterArg.get(i).length > 0) {
-                                tvFilterCompany.setVisibility(View.VISIBLE);
-                                tvFilterCompany.setText("Организация(" + (filterArg.get(i).length -1) + ")");
-                            } else tvFilterCompany.setVisibility(View.GONE);
-                            break;
-                        case 1:
-                            if (filterArg.get(i).length > 0 ) {
-                                tvFilterFiliate.setVisibility(View.VISIBLE);
-                                tvFilterFiliate.setText("Филиал(" + (filterArg.get(i).length -1) + ")");
-                            } else tvFilterFiliate.setVisibility(View.GONE);
-                            break;
-                        case 2:
-                            if (filterArg.get(i).length > 0 ) {
-                                tvFilterTypeComplect.setVisibility(View.VISIBLE);
-                                tvFilterTypeComplect.setText("Тип комплекта(" + (filterArg.get(i).length - 1) + ")");
-                            } else tvFilterTypeComplect.setVisibility(View.GONE);
-                            break;
-                        case 3:
-                            if (filterArg.get(i).length > 0 ) {
-                                tvFilterGroupProcessed.setVisibility(View.VISIBLE);
-                                tvFilterGroupProcessed.setText("Группа Обработки(" + (filterArg.get(i).length - 1) + ")");
-                            } else tvFilterGroupProcessed.setVisibility(View.GONE);
-                            break;
-                        case 4:
-                            if (filterArg.get(i).length > 0 ) {
-                                tvFilterDistrict.setVisibility(View.VISIBLE);
-                                tvFilterDistrict.setText("Округ(" + (filterArg.get(i).length - 1) + ")");
-                            } else tvFilterDistrict.setVisibility(View.GONE);
-                            break;
-                        case 5:
-                            if (filterArg.get(i).length > 0 ) {
-                                tvFilterPodrasdelenie.setVisibility(View.VISIBLE);
-                                tvFilterPodrasdelenie.setText("Подразделение(" + (filterArg.get(i).length -1) + ")");
-                            } else tvFilterPodrasdelenie.setVisibility(View.GONE);
-                            break;
-                    }
+                switch (i) {
+                    case 0:
+                        if (filterArg.get(i).length > 0) {
+                            tvFilterCompany.setVisibility(View.VISIBLE);
+                            tvFilterCompany.setText("Организация(" + (filterArg.get(i).length -1) + ")");
+                        } else tvFilterCompany.setVisibility(View.GONE);
+                        break;
+                    case 1:
+                        if (filterArg.get(i).length > 0 ) {
+                            tvFilterFiliate.setVisibility(View.VISIBLE);
+                            tvFilterFiliate.setText("Филиал(" + (filterArg.get(i).length -1) + ")");
+                        } else tvFilterFiliate.setVisibility(View.GONE);
+                        break;
+                    case 2:
+                        if (filterArg.get(i).length > 0 ) {
+                            tvFilterTypeComplect.setVisibility(View.VISIBLE);
+                            tvFilterTypeComplect.setText("Тип комплекта(" + (filterArg.get(i).length - 1) + ")");
+                        } else tvFilterTypeComplect.setVisibility(View.GONE);
+                        break;
+                    case 3:
+                        if (filterArg.get(i).length > 0 ) {
+                            tvFilterGroupProcessed.setVisibility(View.VISIBLE);
+                            tvFilterGroupProcessed.setText("Группа Обработки(" + (filterArg.get(i).length - 1) + ")");
+                        } else tvFilterGroupProcessed.setVisibility(View.GONE);
+                        break;
+                    case 4:
+                        if (filterArg.get(i).length > 0 ) {
+                            tvFilterDistrict.setVisibility(View.VISIBLE);
+                            tvFilterDistrict.setText("Округ(" + (filterArg.get(i).length - 1) + ")");
+                        } else tvFilterDistrict.setVisibility(View.GONE);
+                        break;
+                    case 5:
+                        if (filterArg.get(i).length > 0 ) {
+                            tvFilterPodrasdelenie.setVisibility(View.VISIBLE);
+                            tvFilterPodrasdelenie.setText("Подразделение(" + (filterArg.get(i).length -1) + ")");
+                        } else tvFilterPodrasdelenie.setVisibility(View.GONE);
+                        break;
+                }
             }
         } else  {
             tvFilterCompany.setVisibility(View.GONE);
@@ -402,42 +431,54 @@ public class MonitoringFragment extends Fragment {
 
     private List<ChartData> getDataCountsPeriod(String dateFrom, String dateBefore) {
         List<ChartData> countsMonitoring = new ArrayList<>();
-        ChartData openChart = new ChartData("Открыто", dbWrite.getCountsOf(OpenSet.TABLE_NAME, dateFrom, dateBefore), dbWrite.getCountOf(OpenSet.TABLE_NAME, dateFrom, dateBefore));
-        countsMonitoring.add(openChart);
-
-        ChartData receivedData = new ChartData("Поступило", dbWrite.getCountsOf(ReceiptSet.TABLE_NAME, dateFrom, dateBefore), dbWrite.getCountOf(ReceiptSet.TABLE_NAME, dateFrom, dateBefore));
-        countsMonitoring.add(receivedData);
-
         int[] counts = dbWrite.getInWorkCount(dateFrom, dateBefore);
         int count = counts[0];
         int inWork = counts[1];
 
-        ChartData inWorks = new ChartData("В работе", dbWrite.getInWorkCounts(dateFrom, dateBefore), inWork);
-        countsMonitoring.add(inWorks);
-
-        ChartData complete = new ChartData("Обработано", dbWrite.getCompleteCounts(dateFrom, dateBefore), count - inWork);
-        countsMonitoring.add(complete);
+        switch (title) {
+            case "Открыто":
+                ChartData openChart = new ChartData("Открыто", dbWrite.getCountsOf(DBContact.OpenSet.TABLE_NAME, dateFrom, dateBefore), dbWrite.getCountOf(DBContact.OpenSet.TABLE_NAME, dateFrom, dateBefore));
+                countsMonitoring.add(openChart);
+                break;
+            case "Поступило":
+                ChartData receivedData = new ChartData("Поступило", dbWrite.getCountsOf(DBContact.ReceiptSet.TABLE_NAME, dateFrom, dateBefore), dbWrite.getCountOf(DBContact.ReceiptSet.TABLE_NAME, dateFrom, dateBefore));
+                countsMonitoring.add(receivedData);
+                break;
+            case "В работе":
+                ChartData inWorks = new ChartData("В работе", dbWrite.getInWorkCounts(dateFrom, dateBefore), inWork);
+                countsMonitoring.add(inWorks);
+                break;
+            case "Обработано":
+                ChartData complete = new ChartData("Обработано", dbWrite.getCompleteCounts(dateFrom, dateBefore), count - inWork);
+                countsMonitoring.add(complete);
+        }
 
         return countsMonitoring;
     }
 
     private List<ChartData> getDataCountsFilter(String selectFilter, String[] filtersArgument) {
         List<ChartData> countsMonitoring = new ArrayList<>();
-        ChartData openChart = new ChartData("Открыто", dbWrite.getCountsWithFilter(OpenSet.TABLE_NAME, selectFilter, filtersArgument), dbWrite.getCountWithFilter(OpenSet.TABLE_NAME, selectFilter, filtersArgument));
-        countsMonitoring.add(openChart);
-
-        ChartData receivedData = new ChartData("Поступило", dbWrite.getCountsWithFilter(ReceiptSet.TABLE_NAME, selectFilter, filtersArgument), dbWrite.getCountWithFilter(ReceiptSet.TABLE_NAME, selectFilter, filtersArgument));
-        countsMonitoring.add(receivedData);
-
         int[] counts = dbWrite.getInWorkCountWithFilter(selectFilter, filtersArgument);
         int count = counts[0];
         int inWork = counts[1];
-
-        ChartData inWorks = new ChartData("В работе", dbWrite.getInWorkCountsWithFilter(selectFilter, filtersArgument), inWork);
-        countsMonitoring.add(inWorks);
-
-        ChartData complete = new ChartData("Обработано", dbWrite.getCompleteCountsWithFilter(selectFilter, filtersArgument), count - inWork);
-        countsMonitoring.add(complete);
+        switch (title) {
+            case "Открыто":
+                ChartData openChart = new ChartData("Открыто", dbWrite.getCountsWithFilter(DBContact.OpenSet.TABLE_NAME, selectFilter, filtersArgument), dbWrite.getCountWithFilter(DBContact.OpenSet.TABLE_NAME, selectFilter, filtersArgument));
+                countsMonitoring.add(openChart);
+                break;
+            case "Поступило":
+                ChartData receivedData = new ChartData("Поступило", dbWrite.getCountsWithFilter(DBContact.ReceiptSet.TABLE_NAME, selectFilter, filtersArgument), dbWrite.getCountWithFilter(DBContact.ReceiptSet.TABLE_NAME, selectFilter, filtersArgument));
+                countsMonitoring.add(receivedData);
+                break;
+            case "В работе":
+                ChartData inWorks = new ChartData("В работе", dbWrite.getInWorkCountsWithFilter(selectFilter, filtersArgument), inWork);
+                countsMonitoring.add(inWorks);
+                break;
+            case "Обработано":
+                ChartData complete = new ChartData("Обработано", dbWrite.getCompleteCountsWithFilter(selectFilter, filtersArgument), count - inWork);
+                countsMonitoring.add(complete);
+                break;
+        }
 
         return countsMonitoring;
     }
@@ -463,15 +504,15 @@ public class MonitoringFragment extends Fragment {
         StringBuilder arg = new StringBuilder(startDate + ";" + endDate);
         String[] filtersArgs;
         for (int i = 0; i < filtersArg.size(); i++) {
-           String[] filters = filtersArg.get(i);
-           if (filters.length > 1) {
-               for (int c = 1; c < filters.length; c++) {
-                   if (filters[c] != null) {
-                       arg.append(";").append(filters[c]);
-                   }
-               }
-           }
-       }
+            String[] filters = filtersArg.get(i);
+            if (filters.length > 1) {
+                for (int c = 1; c < filters.length; c++) {
+                    if (filters[c] != null) {
+                        arg.append(";").append(filters[c]);
+                    }
+                }
+            }
+        }
         filtersArgs = arg.toString().split(";");
         for (int i = 0; i < filtersArgs.length; i++) {
             Log.d("FILTER INIT", filtersArgs[i]);
@@ -480,6 +521,7 @@ public class MonitoringFragment extends Fragment {
     }
 
     private void enableFilters(String startDate, String endDate, boolean enable) {
+        chartData.clear();
         if (enable) {
             filterArg = adapterFilter.getFilterArg();
             filtersArgument = getFiltersArg(filterArg, startDate, endDate);
@@ -493,16 +535,16 @@ public class MonitoringFragment extends Fragment {
             if (filtersArgument.length > 2) {
                 filterEnabled = true;
                 chartData = getDataCountsFilter(selectFilter, filtersArgument);
-                setSlaProgressBar(getSlaPercentWithFilter(selectFilter, filtersArgument), getSlaExpiredPercentWithFilter(selectFilter, filtersArgument));
+
             } else {
                 filterEnabled = false;
                 chartData = getDataCountsPeriod(startDate, endDate);
-                setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
+
             }
         } else {
             chartData = getDataCountsPeriod(startDate, endDate);
-            setSlaProgressBar(getSlaPercent(startDate, endDate), getSlaExpiredPercent(startDate, endDate));
         }
+        Log.d("TAG", "getChart " + chartData.size());
     }
 
     private List<Filter> getCompanyFilter() {
@@ -603,144 +645,113 @@ public class MonitoringFragment extends Fragment {
         return filter;
     }
 
-    //инициализация Recycler View
-    private void initChartRecycle(List<ChartData> listOfChart, boolean enableChartView) {
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 2);
-        if (enableChartView) {
-            linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
-            adapterChardCard = new AdapterChartsCard(getContext(), listOfChart, enableChartView);
-            cardRecycler.setLayoutManager(linearLayoutManager);
-            slaExpired.setVisibility(View.GONE);
-            slaNotExpired.setVisibility(View.GONE);
-            tvSla.setVisibility(View.GONE);
-            tvSlaExpired.setVisibility(View.GONE);
-            cardSlaExpired.setVisibility(View.GONE);
-            cardSlaNotExpired.setVisibility(View.GONE);
-        } else {
-            gridLayoutManager.setOrientation(GridLayoutManager.VERTICAL);
-            adapterChardCard = new AdapterChartsCard(getContext(), listOfChart, enableChartView, chartData -> {
-                FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-//                    String[] countStr = new String[chartData.getCounts().size()];
-//                    int[] contInt = new int[chartData.getCounts().size()];
-//                    for (int i = 0; i < chartData.getCounts().size(); i++) {
-//                        countStr[i] = chartData.getCounts().get(i).first;
-//                        contInt[i] = chartData.getCounts().get(i).second;
-//                    }
-                DetailsMonitorFragment detailsMonitorFragment = DetailsMonitorFragment.newInstance(chartData.getTitle(), startDate, endDate, filterEnabled, filtersTag.size(), filterArg.size());
-                for (int i = 0; i < filtersTag.size(); i++) {
-                    SharedPreferensStorage.addFilters("filter" + i, filtersTag.get(i));
-                }
-                Log.d("FILTER", "onCreateView: " + filterArg.size());
-                for (int i = 0; i < filterArg.size(); i++) {
-                    SharedPreferensStorage.addListFilterArg("fa" + i, filterArg.get(i));
-                }
-                ft.addToBackStack("monitor");
-                ft.replace(R.id.tab_container, detailsMonitorFragment).commit();
-//                    List<ChartData> data = new ArrayList<>();
-//                    data.add(chartData);
-//                    initChartRecycle(data, true);
-            });
-            cardRecycler.setLayoutManager(gridLayoutManager);
-            slaExpired.setVisibility(View.VISIBLE);
-            slaNotExpired.setVisibility(View.VISIBLE);
-            tvSla.setVisibility(View.VISIBLE);
-            tvSlaExpired.setVisibility(View.VISIBLE);
-            cardSlaExpired.setVisibility(View.VISIBLE);
-            cardSlaNotExpired.setVisibility(View.VISIBLE);
-        }
-        cardRecycler.setAdapter(adapterChardCard);
-    }
-
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_main, menu);
+//        inflater.inflate(R.menu.menu_main, menu);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-
-        switch (id) {
-            case R.id.set_view:
-                if (enableChartView) {
-                    item.setIcon(R.drawable.ic_card_set);
-                    initChartRecycle(chartData, enableChartView);
-                    adapterChardCard.notifyDataSetChanged();
-                    enableChartView = false;
-                } else {
-                    item.setIcon(R.drawable.ic_grafic_set);
-                    initChartRecycle(chartData, enableChartView);
-                    adapterChardCard.notifyDataSetChanged();
-                    enableChartView = true;
-                }
-
-                return enableChartView;
+    private void initChart(ChartData chartData) {
+        setChartStyle(getContext(), chartData);
+        tvTitleChart.setText(chartData.getTitle());
+        tvCountChart.setText(String.valueOf(chartData.getCount()));
+        int lastIndex = chartData.getCounts().size() - 1;
+        if (chartData.getCounts().get(0).second > chartData.getCounts().get(lastIndex).second) {
+            ivArrow.setImageResource(R.drawable.ic_arrow_red_down);
+        } else if (chartData.getCounts().get(0).equals(chartData.getCounts().get(lastIndex))) {
+            ivArrow.setImageResource(R.color.white);
+        } else {
+            ivArrow.setImageResource(R.drawable.ic_arrow_green_up);
         }
-        return true;
+        switch (chartData.getTitle()) {
+            case "Открыто":
+                cvChart.setCardBackgroundColor(getContext().getResources().getColor(R.color.cardViewOpen));
+                break;
+            case "Поступило":
+                cvChart.setCardBackgroundColor(getContext().getResources().getColor(R.color.cardViewReceived));
+                break;
+            case "В работе":
+                cvChart.setCardBackgroundColor(getContext().getResources().getColor(R.color.cardViewInWork));
+                break;
+            case "Обработано":
+                cvChart.setCardBackgroundColor(getContext().getResources().getColor(R.color.cardViewComplete));
+                break;
+        }
     }
 
-    private int getSlaPercent(String dateFrom, String dateBefore) {
-        float count = dbWrite.getCountOf(ProcessedSet.TABLE_NAME, dateFrom, dateBefore);
-        float sla = dbWrite.getSlaNotExpired(dateFrom, dateBefore);
-        int percent = 0;
-        Log.d("SLA", "count = " + count + "sla = " + sla);
-        if (count != 0) {
-            percent = (int) (sla/(count/100));
-        }
+    private void setChartStyle(Context context, ChartData chartData) {
 
-        return percent;
+        chart.getAxisRight().setEnabled(false);
+        chart.getAxisLeft().setEnabled(true);
+        chart.getDescription().setEnabled(false);
+        chart.getLegend().setEnabled(false);
+        chart.setBackgroundColor(Color.WHITE);
+        chart.setOnChartValueSelectedListener(this);
+        chart.setDrawGridBackground(false);
+
+        MarkerView markerView = new ru.optimum.load.magnitdemo.help.MarkerView(context, R.layout.custom_marker_view);
+        markerView.setChartView(chart);
+        chart.setMarker(markerView);
+
+        chart.setDragEnabled(true);
+        chart.setPinchZoom(true);
+        chart.animateX(2000);
+
+        XAxis xAxis = chart.getXAxis();
+        xAxis.setEnabled(false);
+
+        YAxis yAxis = chart.getAxisLeft();
+        yAxis.setLabelCount(4, true);
+        yAxis.setDrawLabels(false);
+        yAxis.setDrawAxisLine(false);
+        setDataChart(chartData);
     }
 
-    private int getSlaExpiredPercent(String dateFrom, String dateBefore) {
-        float count = dbWrite.getCountOf(ProcessedSet.TABLE_NAME, dateFrom, dateBefore);
-        float sla = dbWrite.getSla75Expired(dateFrom, dateBefore);
-        int percent = 0;
-
-        if (count != 0) {
-            percent = (int) (sla/((count)/100));
+    private void setDataChart(ChartData chartData) {
+        ArrayList<Entry> values = new ArrayList<>();
+        if (chartData.getCounts().size() > 100) {
+            List<Pair<String, Integer>> counts = chartData.getCounts();
+            for (int i = 0; i < chartData.getCounts().size(); i += 10) {
+                String[] date = counts.get(i).first.split("-");
+                int year = Integer.parseInt(date[0]);
+                int month = Integer.parseInt(date[1]);
+                int day = Integer.parseInt(date[2]);
+                Calendar mDate = new GregorianCalendar(year, month - 1, day);
+                values.add(new Entry(i, counts.get(i).second, mDate.getTime()));
+            }
+        } else {
+            List<Pair<String, Integer>> counts = chartData.getCounts();
+            for (int i = 0; i < chartData.getCounts().size(); i++) {
+                String[] date = counts.get(i).first.split("-");
+                int year = Integer.parseInt(date[0]);
+                int month = Integer.parseInt(date[1]);
+                int day = Integer.parseInt(date[2]);
+                Calendar mDate = new GregorianCalendar(year, month - 1, day);
+                values.add(new Entry(i, counts.get(i).second, mDate.getTime()));
+            }
         }
 
-        if (percent > 100) {
-            percent = 100;
+
+        LineDataSet lineData;
+        if (chart.getData() != null && chart.getData().getDataSetCount() > 0) {
+            lineData = (LineDataSet) chart.getData().getDataSetByIndex(0);
+            lineData.setValues(values);
+            lineData.notifyDataSetChanged();
+            chart.getData().notifyDataChanged();
+        } else {
+            lineData = new LineDataSet(values, "");
+            lineData.setColor(Color.RED);
+            lineData.setCircleColor(Color.RED);
+            lineData.setLineWidth(2f);
+            lineData.setCircleRadius(3f);
+            lineData.setFormLineWidth(4f);
+            lineData.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);
+            lineData.setDrawValues(false);
         }
 
-        return percent;
+        LineData data = new LineData(lineData);
+        chart.setData(data);
     }
 
-    private int getSlaPercentWithFilter(String selectFilter, String[] filtersArgument) {
-        float count = dbWrite.getCountWithFilter(ProcessedSet.TABLE_NAME, selectFilter, filtersArgument);
-        float sla = dbWrite.getSlaWithFilter(selectFilter, filtersArgument);
-        int percent = 0;
-        if (count != 0) {
-            percent = (int) (sla/(count/100));
-        }
-
-        if (percent > 100) {
-            percent = 100;
-        }
-
-        return percent;
-    }
-
-    private int getSlaExpiredPercentWithFilter(String selectFilter, String[] filtersArgument) {
-        float count = dbWrite.getCountWithFilter(OpenSet.TABLE_NAME, selectFilter, filtersArgument);
-        float sla = dbWrite.getSlaExpiredWithFilter(selectFilter, filtersArgument);
-        int percent = 0;
-        if (count != 0) {
-            percent = (int) (sla/(count/100));
-        }
-
-        return percent;
-    }
-
-    @SuppressLint("SetTextI18n")
-    private void setSlaProgressBar(int valuePercentSla, int valuePercentSlaExpired) {
-        slaNotExpired.setProgress(valuePercentSla);
-        tvSla.setText(valuePercentSla + "%");
-        slaExpired.setProgress(valuePercentSlaExpired);
-        tvSlaExpired.setText(valuePercentSlaExpired + "%");
-    }
 
     Pair<Boolean, SublimeOptions> getOptions() {
         SublimeOptions options = new SublimeOptions();
@@ -758,7 +769,30 @@ public class MonitoringFragment extends Fragment {
         spinnerPeriod.setAdapter(adapterPeriod);
     }
 
-    public static Fragment newInstance() {
-        return new MonitoringFragment();
+    public static DetailsMonitorFragment newInstance(String title, String startDate, String endDate, Boolean filterEnabled, int size, int sizeA) {
+        DetailsMonitorFragment detailsMonitorFragment = new DetailsMonitorFragment();
+        Bundle args = new Bundle();
+        args.putString("title", title);
+        args.putString("startDate", startDate);
+        args.putString("endDate", endDate);
+        args.putBoolean("filterEnabled", filterEnabled);
+        args.putInt("size", size);
+        args.putInt("sizeA", sizeA);
+        detailsMonitorFragment.setArguments(args);
+        return detailsMonitorFragment;
+    }
+
+    @Override
+    public void onValueSelected(Entry e, Highlight h) {
+        DateFormat df = new SimpleDateFormat("dd MMMM yyyy");
+        tvDateOfCount.setText(df.format(e.getData()) + " года");
+        Log.i("Entry selected", e.toString());
+        Log.i("LOW HIGH", "low: " + chart.getLowestVisibleX() + ", high: " + chart.getHighestVisibleX());
+        Log.i("MIN MAX", "xMin: " + chart.getXChartMin() + ", xMax: " + chart.getXChartMax() + ", yMin: " + chart.getYChartMin() + ", yMax: " + chart.getYChartMax());
+    }
+
+    @Override
+    public void onNothingSelected() {
+        tvDateOfCount.setText("Выберите точку на графике");
     }
 }
