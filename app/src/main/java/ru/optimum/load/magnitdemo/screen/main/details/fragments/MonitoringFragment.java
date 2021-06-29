@@ -50,6 +50,7 @@ import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
 import ru.optimum.load.magnitdemo.screen.adapters.AdapterChartsCard;
 import ru.optimum.load.magnitdemo.screen.adapters.AdapterFilter;
 import ru.optimum.load.magnitdemo.screen.adapters.SpinnerAdapterPeriod;
+import ru.optimum.load.magnitdemo.screen.main.MainActivity;
 import ru.optimum.load.magnitdemo.utils.SharedPreferensStorage;
 
 import static ru.optimum.load.magnitdemo.DBContact.*;
@@ -312,16 +313,23 @@ public class MonitoringFragment extends Fragment {
     }
 
     @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferensStorage.init(getContext());
         SharedPreferensStorage.clearAll();
+
         setHasOptionsMenu(true);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        ((MainActivity) getActivity()).setTitleActionBar("Мониторинг");
         if (chartData.size() > 0){
 
         }
@@ -621,12 +629,12 @@ public class MonitoringFragment extends Fragment {
             gridLayoutManager.setOrientation(GridLayoutManager.VERTICAL);
             adapterChardCard = new AdapterChartsCard(getContext(), listOfChart, enableChartView, chartData -> {
                 FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-//                    String[] countStr = new String[chartData.getCounts().size()];
-//                    int[] contInt = new int[chartData.getCounts().size()];
-//                    for (int i = 0; i < chartData.getCounts().size(); i++) {
-//                        countStr[i] = chartData.getCounts().get(i).first;
-//                        contInt[i] = chartData.getCounts().get(i).second;
-//                    }
+                    String[] countStr = new String[chartData.getCounts().size()];
+                    int[] contInt = new int[chartData.getCounts().size()];
+                    for (int i = 0; i < chartData.getCounts().size(); i++) {
+                        countStr[i] = chartData.getCounts().get(i).first;
+                        contInt[i] = chartData.getCounts().get(i).second;
+                    }
                 DetailsMonitorFragment detailsMonitorFragment = DetailsMonitorFragment.newInstance(chartData.getTitle(), startDate, endDate, filterEnabled, filtersTag.size(), filterArg.size());
                 for (int i = 0; i < filtersTag.size(); i++) {
                     SharedPreferensStorage.addFilters("filter" + i, filtersTag.get(i));

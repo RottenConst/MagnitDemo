@@ -1,21 +1,23 @@
 package ru.optimum.load.magnitdemo.screen.main;
 
-import android.icu.text.Replaceable;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.lifecycle.ReportFragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import ru.optimum.load.magnitdemo.R;
 import ru.optimum.load.magnitdemo.app.DemoApp;
 import ru.optimum.load.magnitdemo.app.SyncManager;
-import ru.optimum.load.magnitdemo.data.Report;
+import ru.optimum.load.magnitdemo.screen.adapters.ViewPagerAdapter;
 import ru.optimum.load.magnitdemo.screen.main.details.fragments.MonitoringFragment;
 import ru.optimum.load.magnitdemo.screen.main.details.fragments.ReportsFragment;
 
@@ -26,14 +28,30 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
 
     private static boolean firstStart = true;
     BottomNavigationView navigationView;
+//    TabLayout tabLayout;
+//    ViewPager2 viewPager;
     ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+//        viewPager = findViewById(R.id.viewpager);
+//        tabLayout = findViewById(R.id.tab_container);
+
         actionBar = getSupportActionBar();
         DemoApp.syncManager().setSyncStatusListener(this);// регистрируем слушатель синхранизации
+
+//        viewPager.setAdapter(new ViewPagerAdapter(this));
+//
+//        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+//            tab.setIcon(R.drawable.shape_oval);
+//            if (position == 0) {
+//                tab.setText("Мониторинг");
+//            } else if (position == 1) {
+//                tab.setText("Отчеты");
+//            }
+//        }).attach();
 
         navigationView = findViewById(R.id.navigation_details);
 //        navigationView.getMenu().getItem(0).setChecked(true);
@@ -93,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements SyncManager.ISync
     private void showToast(String message) {
         Toast toast = Toast.makeText(this, message, Toast.LENGTH_LONG);
         toast.show();
+    }
+
+    public void setTitleActionBar(String titleActionBar) {
+        actionBar.setTitle(titleActionBar);
     }
 
     @Override

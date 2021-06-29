@@ -30,6 +30,7 @@ import ru.optimum.load.magnitdemo.data.Report;
 import ru.optimum.load.magnitdemo.db.DatabaseWrapper;
 import ru.optimum.load.magnitdemo.screen.adapters.AdapterReport;
 import ru.optimum.load.magnitdemo.screen.adapters.SpinnerAdapterReport;
+import ru.optimum.load.magnitdemo.screen.main.MainActivity;
 
 public class ReportsFragment extends Fragment {
 
@@ -123,6 +124,11 @@ public class ReportsFragment extends Fragment {
         return topReport;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((MainActivity) getActivity()).setTitleActionBar("Отчеты");
+    }
 
     private void initRecyclerReport(Context context, List<Report> reports) {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
